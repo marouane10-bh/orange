@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kogito-jobs-service
+  namespace: business-automation
+spec:
+  selector:
+    app: kogito-jobs-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

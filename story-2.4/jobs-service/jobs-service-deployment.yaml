@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kogito-jobs-service
+  namespace: business-automation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kogito-jobs-service
+  template:
+    metadata:
+      labels:
+        app: kogito-jobs-service
+    spec:
+      containers:
+        - name: kogito-jobs-service
+          image: apache/incubator-kie-kogito-jobs-service-postgresql:10.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: jobs-service-config
+            - secretRef:
+                name: jobs-service-secret

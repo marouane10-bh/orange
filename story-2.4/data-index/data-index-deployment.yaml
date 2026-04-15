@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kogito-data-index
+  namespace: business-automation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kogito-data-index
+  template:
+    metadata:
+      labels:
+        app: kogito-data-index
+    spec:
+      containers:
+        - name: kogito-data-index
+          image: apache/incubator-kie-kogito-data-index-postgresql:10.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: data-index-config
+            - secretRef:
+                name: data-index-secret

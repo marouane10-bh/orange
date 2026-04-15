@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-index-config
+  namespace: business-automation
+data:
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://postgresql.data.svc.cluster.local:5432/kogito_data_index"
+  QUARKUS_DATASOURCE_REACTIVE_URL: "postgresql://postgresql.data.svc.cluster.local:5432/kogito_data_index"
+  QUARKUS_DATASOURCE_DB_KIND: "postgresql"
+  QUARKUS_FLYWAY_MIGRATE_AT_START: "true"
+
+  MP_MESSAGING_INCOMING_KOGITO_CONNECTOR: "smallrye-kafka"
+  MP_MESSAGING_INCOMING_KOGITO_TOPIC: "kogito-processinstances-events"
+  MP_MESSAGING_INCOMING_KOGITO_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  MP_MESSAGING_INCOMING_KOGITO_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+  MP_MESSAGING_INCOMING_KOGITO_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+
+  MP_MESSAGING_INCOMING_KOGITO_PROCESSINSTANCES_EVENTS_CONNECTOR: "smallrye-kafka"
+  MP_MESSAGING_INCOMING_KOGITO_PROCESSINSTANCES_EVENTS_TOPIC: "kogito-processinstances-events"
+  MP_MESSAGING_INCOMING_KOGITO_PROCESSINSTANCES_EVENTS_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  MP_MESSAGING_INCOMING_KOGITO_PROCESSINSTANCES_EVENTS_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+
+  MP_MESSAGING_INCOMING_KOGITO_JOBS_EVENTS_CONNECTOR: "smallrye-kafka"
+  MP_MESSAGING_INCOMING_KOGITO_JOBS_EVENTS_TOPIC: "kogito-jobs-events"
+  MP_MESSAGING_INCOMING_KOGITO_JOBS_EVENTS_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+  MP_MESSAGING_INCOMING_KOGITO_JOBS_EVENTS_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+  MP_MESSAGING_INCOMING_KOGITO_USERTASKINSTANCES_EVENTS_CONNECTOR: "smallrye-kafka"
+MP_MESSAGING_INCOMING_KOGITO_USERTASKINSTANCES_EVENTS_TOPIC: "kogito-usertaskinstances-events"
+MP_MESSAGING_INCOMING_KOGITO_USERTASKINSTANCES_EVENTS_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+MP_MESSAGING_INCOMING_KOGITO_USERTASKINSTANCES_EVENTS_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+
+MP_MESSAGING_INCOMING_KOGITO_PROCESSDEFINITIONS_EVENTS_CONNECTOR: "smallrye-kafka"
+MP_MESSAGING_INCOMING_KOGITO_PROCESSDEFINITIONS_EVENTS_TOPIC: "kogito-processdefinitions-events"
+MP_MESSAGING_INCOMING_KOGITO_PROCESSDEFINITIONS_EVENTS_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+MP_MESSAGING_INCOMING_KOGITO_PROCESSDEFINITIONS_EVENTS_VALUE_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
