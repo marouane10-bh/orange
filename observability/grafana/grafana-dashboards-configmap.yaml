@@ -1,0 +1,150 @@
+# ── Grafana Dashboards ConfigMap ─────────────────────────────────────────────
+# Packages dashboard JSON files for automatic loading by Grafana.
+# The label grafana_dashboard: "1" triggers Grafana's sidecar to pick them up.
+#
+# HOW TO UPDATE A DASHBOARD:
+#   1. Edit the dashboard in the Grafana UI
+#   2. Click Share → Export → Export for sharing externally
+#   3. Copy the JSON and replace the content below
+#   4. kubectl apply -f this file → Grafana reloads automatically
+# ─────────────────────────────────────────────────────────────────────────────
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  # ── Dashboard 1: Platform Overview ─────────────────────────────────────────
+  # Panels: JVM heap, CPU, HTTP req/s, HTTP 5xx rate, CrashLoopBackOff pods
+  # Replace the JSON below with your exported dashboard from Grafana UI.
+  # The JSON included here is a minimal working scaffold — extend as needed.
+  platform-overview.json: |
+    {
+      "title": "Platform Overview",
+      "uid": "platform-overview",
+      "tags": ["platform", "jvm"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "title": "JVM Heap Used (by service)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [{
+            "expr": "sum(jvm_memory_used_bytes{area=\"heap\"}) by (application)",
+            "legendFormat": "{{application}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "bytes"}}
+        },
+        {
+          "id": 2,
+          "title": "CPU Usage (by pod)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "targets": [{
+            "expr": "rate(process_cpu_seconds_total[5m]) * 100",
+            "legendFormat": "{{pod}}"
+          }],
+          "fieldConfig": {"defaults": {"unit": "percent"}}
+        },
+        {
+          "id": 3,
+          "title": "HTTP Requests / sec",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count[1m])) by (application)",
+            "legendFormat": "{{application}}"
+          }]
+        },
+        {
+          "id": 4,
+          "title": "HTTP 5xx Error Rate",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [{
+            "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[5m])) by (application)",
+            "legendFormat": "{{application}}"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "Pods in CrashLoopBackOff",
+          "type": "stat",
+          "gridPos": {"h": 4, "w": 24, "x": 0, "y": 16},
+          "targets": [{
+            "expr": "sum(kube_pod_container_status_waiting_reason{reason=\"CrashLoopBackOff\"})"
+          }],
+          "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "red", "value": 1}]}}}
+        }
+      ]
+    }
+
+  # ── Dashboard 2: Application Processes ─────────────────────────────────────
+  # Panels: processes started/min, error rate %, p95 duration, Kafka lag, DB connections
+  # Adapt the metric names to match your custom metrics from ProcessMetrics.java
+  app-processes.json: |
+    {
+      "title": "Application Processes",
+      "uid": "app-processes",
+      "tags": ["app", "processes", "business"],
+      "timezone": "browser",
+      "schemaVersion": 38,
+      "refresh": "15s",
+      "panels": [
+        {
+          "id": 1,
+          "title": "Processes Started / min",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "targets": [{
+            "expr": "rate(process_started_total[1m])",
+            "legendFormat": "{{type}}"
+          }]
+        },
+        {
+          "id": 2,
+          "title": "Process Error Rate (%)",
+          "type": "gauge",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "targets": [{
+            "expr": "rate(process_error_total[5m]) / rate(process_started_total[5m]) * 100"
+          }],
+          "fieldConfig": {"defaults": {"unit": "percent", "thresholds": {"steps": [{"color": "green", "value": 0}, {"color": "yellow", "value": 3}, {"color": "red", "value": 5}]}}}
+        },
+        {
+          "id": 3,
+          "title": "Process Duration p95 (s)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "targets": [{
+            "expr": "histogram_quantile(0.95, rate(process_duration_seconds_bucket[5m]))"
+          }],
+          "fieldConfig": {"defaults": {"unit": "s"}}
+        },
+        {
+          "id": 4,
+          "title": "Kafka Consumer Lag",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "targets": [{
+            "expr": "kafka_consumergroup_lag",
+            "legendFormat": "{{consumergroup}}"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "DB Active Connections",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "targets": [{
+            "expr": "pg_stat_database_numbackends"
+          }]
+        }
+      ]
+    }

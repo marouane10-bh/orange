@@ -1,0 +1,95 @@
+# ── ServiceMonitors ───────────────────────────────────────────────────────────
+# Each ServiceMonitor tells Prometheus which pods to scrape, on which port,
+# and at what interval. Variables substituted by scripts/deploy.sh.
+#
+# KEY RULE: The label in spec.selector.matchLabels MUST exactly match
+# a label on the Kubernetes Service of your pod — not the pod label,
+# the Service label. If they don't match, Prometheus finds no targets.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Monitor for your main application service ────────────────────────────────
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ${MAIN_SERVICE_NAME}-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack   # must match Prometheus serviceMonitorSelector
+spec:
+  namespaceSelector:
+    matchNames:
+      - ${APP_NAMESPACE}         # namespace where your services run
+  selector:
+    matchLabels:
+      ${APP_LABEL_KEY}: ${APP_LABEL_VALUE}   # label on your K8s Service
+  endpoints:
+    - port: management             # name of the port in your K8s Service (port 9000)
+      path: /q/metrics             # Quarkus Micrometer metrics endpoint
+      interval: ${SCRAPE_INTERVAL} # how often to scrape (e.g. 15s)
+      scrapeTimeout: 10s
+
+---
+# ── Monitor for your jobs / scheduler service ────────────────────────────────
+# Remove this block if you don't have a jobs service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ${JOBS_SERVICE_NAME}-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - ${APP_NAMESPACE}
+  selector:
+    matchLabels:
+      app: ${JOBS_SERVICE_NAME}
+  endpoints:
+    - port: management
+      path: /q/metrics
+      interval: ${SCRAPE_INTERVAL}
+
+---
+# ── Monitor for Kafka (via Strimzi JMX exporter) ────────────────────────────
+# Remove this block if you are not using Kafka / Strimzi
+# Requires: metricsConfig enabled in your Kafka CRD (Story 2.4)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - ${APP_NAMESPACE}
+  selector:
+    matchLabels:
+      strimzi.io/kind: Kafka      # label added automatically by Strimzi operator
+  endpoints:
+    - port: tcp-prometheus
+      interval: 30s
+
+---
+# ── Monitor for PostgreSQL (via postgres-exporter sidecar) ──────────────────
+# Remove this block if you are not using PostgreSQL
+# Requires: metrics.enabled=true in your PostgreSQL Helm values (Story 2.4)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql-monitor
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - ${APP_NAMESPACE}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+  endpoints:
+    - port: metrics
+      interval: 30s

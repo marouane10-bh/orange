@@ -1,0 +1,143 @@
+# ── PrometheusRule: alert definitions ────────────────────────────────────────
+# Variables substituted by scripts/deploy.sh from config.env.
+# Thresholds are controlled by config.env — adjust without touching this file.
+#
+# How alerts work:
+#   expr   → PromQL condition that must be true
+#   for    → how long the condition must hold before firing (filters false positives)
+#   labels → severity drives Alertmanager routing
+#   annotations.runbook → link to the diagnosis guide in runbooks/
+# ─────────────────────────────────────────────────────────────────────────────
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prom-stack
+spec:
+  groups:
+
+  # ── Group 1: Application process health ──────────────────────────────────────
+  - name: app.process.health
+    rules:
+
+    - alert: HighErrorRate
+      # Fires when error rate exceeds the threshold for 3 consecutive minutes.
+      # Prevents false positives from short traffic spikes.
+      expr: |
+        (
+          rate(process_error_total[5m])
+          /
+          rate(process_started_total[5m])
+        ) * 100 > ${ALERT_ERROR_RATE_THRESHOLD}
+      for: 3m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High application error rate"
+        description: 'Error rate is {{ printf "%.1f" $value }}% (threshold: ${ALERT_ERROR_RATE_THRESHOLD}%)'
+        runbook: "${RUNBOOK_BASE_URL}/HighErrorRate.md"
+
+    - alert: MainServiceDown
+      # No metrics received for 2 minutes = pod is dead or unreachable.
+      expr: absent(up{job="${MAIN_SERVICE_NAME}-monitor"} == 1)
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Main service unreachable"
+        description: "Prometheus cannot scrape ${MAIN_SERVICE_NAME} for 2 minutes."
+        runbook: "${RUNBOOK_BASE_URL}/PodCrashLooping.md"
+
+  # ── Group 2: Database health ─────────────────────────────────────────────────
+  - name: app.database.health
+    rules:
+
+    - alert: DatabaseConnectionSaturation
+      # High connection count risks exhausting the DB connection pool,
+      # causing application errors even if the DB itself is healthy.
+      expr: |
+        pg_stat_database_numbackends
+        /
+        pg_settings_max_connections
+        * 100 > ${ALERT_DB_CONNECTIONS_THRESHOLD}
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Database connections near saturation"
+        description: '{{ printf "%.0f" $value }}% of max connections in use (threshold: ${ALERT_DB_CONNECTIONS_THRESHOLD}%)'
+        runbook: "${RUNBOOK_BASE_URL}/DatabaseDown.md"
+
+    - alert: DatabaseDown
+      expr: absent(pg_up == 1)
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Database unreachable"
+        description: "PostgreSQL is not responding. All processes depending on DB will fail."
+        runbook: "${RUNBOOK_BASE_URL}/DatabaseDown.md"
+
+  # ── Group 3: Kafka / event-driven health ─────────────────────────────────────
+  # Remove this group if you are not using Kafka
+  - name: app.kafka.health
+    rules:
+
+    - alert: KafkaConsumerLagHigh
+      # A growing lag means the application is not processing events fast enough.
+      # In an event-driven system, this is the most common cause of silent failure:
+      # processes appear to hang because their trigger event is stuck in the queue.
+      expr: kafka_consumergroup_lag{consumergroup=~".*"} > ${ALERT_KAFKA_LAG_THRESHOLD}
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Kafka consumer lag is critically high"
+        description: "Consumer group {{ $labels.consumergroup }} has {{ $value }} messages pending (threshold: ${ALERT_KAFKA_LAG_THRESHOLD})"
+        runbook: "${RUNBOOK_BASE_URL}/KafkaConsumerLag.md"
+
+    - alert: KafkaBrokerDown
+      expr: count(kafka_server_brokerstate == 3) < 1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "No active Kafka broker detected"
+        runbook: "${RUNBOOK_BASE_URL}/KafkaConsumerLag.md"
+
+  # ── Group 4: Kubernetes infrastructure ───────────────────────────────────────
+  - name: app.infra
+    rules:
+
+    - alert: PodCrashLooping
+      # CrashLoopBackOff means the pod keeps crashing and restarting.
+      # Common causes: config error, OOM, missing dependency.
+      expr: |
+        kube_pod_container_status_waiting_reason{
+          reason="CrashLoopBackOff",
+          namespace="${APP_NAMESPACE}"
+        } == 1
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod in CrashLoopBackOff: {{ $labels.pod }}"
+        description: "Pod {{ $labels.pod }} is CrashLoopBackOff in namespace ${APP_NAMESPACE}."
+        runbook: "${RUNBOOK_BASE_URL}/PodCrashLooping.md"
+
+    - alert: HighJVMMemoryUsage
+      # JVM at 90%+ heap risks OOMKill from Kubernetes.
+      # This alert gives time to intervene before the pod is killed.
+      expr: |
+        (jvm_memory_used_bytes{area="heap"}
+         / jvm_memory_max_bytes{area="heap"}) * 100 > ${ALERT_MEMORY_THRESHOLD}
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High JVM memory on {{ $labels.application }}"
+        description: 'Heap usage: {{ printf "%.0f" $value }}% — OOMKill risk if not addressed.'
+        runbook: "${RUNBOOK_BASE_URL}/PodCrashLooping.md"

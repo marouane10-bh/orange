@@ -1,0 +1,59 @@
+# ── Grafana Helm values ───────────────────────────────────────────────────────
+# Variables substituted by scripts/deploy.sh from config.env.
+# ─────────────────────────────────────────────────────────────────────────────
+
+adminUser: ${GRAFANA_ADMIN_USER}
+adminPassword: ${GRAFANA_ADMIN_PASSWORD}
+
+# ── Datasources: auto-provisioned on startup ──────────────────────────────────
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+
+      - name: Prometheus
+        type: prometheus
+        url: http://kube-prom-stack-prometheus.${MONITORING_NAMESPACE}.svc:9090
+        access: proxy
+        isDefault: true
+        jsonData:
+          timeInterval: "15s"
+
+      - name: Jaeger
+        type: jaeger
+        url: http://jaeger-collector.${MONITORING_NAMESPACE}.svc:16686
+        access: proxy
+
+# ── Dashboard provider: load from ConfigMap ───────────────────────────────────
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: app-dashboards
+        folder: ${GRAFANA_FOLDER_NAME}
+        type: file
+        disableDeletion: true
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/app
+
+dashboardsConfigMaps:
+  app: app-dashboards
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 200m
+
+# ── Grafana configuration ─────────────────────────────────────────────────────
+grafana.ini:
+  server:
+    root_url: "%(protocol)s://%(domain)s:%(http_port)s/"
+  auth.anonymous:
+    enabled: false
+  dashboards:
+    default_home_dashboard_path: /var/lib/grafana/dashboards/app/platform-overview.json
