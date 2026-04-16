@@ -1,7 +1,6 @@
 # EPIC 1 — Discovery & Assessment
 ## Migration Camunda 7 → Kogito
-
-**Date** : 14 avril 2026  
+ 
 **Objectif** : Inventorier l'existant Camunda 7, qualifier les écarts avec Kogito et préparer les lots de migration.
 
 ---
@@ -16,20 +15,7 @@
 ---
 
 ## Story 1.1 — Inventorier les assets Camunda 7
-
-### Priorité
-⚠️ **HIGHEST**
-
-### Description
-Recenser tous les processus, DMN, forms, scripts, delegates, connectors, external tasks, plugins, règles de persistance et mécanismes d'historisation existants dans l'infrastructure Camunda 7.
-
-### Acceptance Criteria
-- ✅ Liste exhaustive des BPMN et DMN disponibles
-- ✅ Tous les artefacts Camunda spécifiques sont identifiés (scripts, delegates, connectors, listeners)
-- ✅ Les dépendances techniques sont documentées (versions, librairies, dépendances inter-processus)
-- ✅ Les owners métier et techniques sont associés à chaque processus
-- ✅ La matrice de dépendances entre processus est établie
-- ✅ Les configurations moteur Camunda 7 (history-level, job-executor, identity) sont documentées
+Recenser tous les processus BPMN, DMN, forms, scripts, delegates, connectors, external tasks, plugins, règles de persistance et mécanismes d'historisation existants dans l'infrastructure Camunda 7.
 
 ### Tasks
 
@@ -73,7 +59,7 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Noter l'usage des propriétés spéciales Camunda (key, defaultValue, readonly, etc.)
 - [ ] Vérifier la présence de logique JavaScript embarquée
 
-**État actuel (tiré du PDF)**
+**État actuel **
 ```
 | Formulaire | Fichier | Task associée | Type | Champs |
 |------------|---------|---------------|------|--------|
@@ -93,7 +79,7 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Vérifier les patterns de gestion d'erreur (try/catch, fault handlers)
 - [ ] Noter les dépendances vers les services métier appelés
 
-**État actuel (tiré du PDF)**
+**État actuel ()**
 ```
 | Delegate | Classe | Service Task | Interface |
 |----------|--------|--------------|-----------|
@@ -116,12 +102,6 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Analyser les accesses à `execution`, `task`, variables de processus
 - [ ] Vérifier les imports et dépendances externes
 
-**Livrables**
-```
-| Élément | Type | Script | Complexité | Variables utilisées |
-|---------|------|--------|------------|---------------------|
-| (À remplir selon audit) | - | - | - | - |
-```
 
 ---
 
@@ -131,12 +111,6 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Noter les variables d'entrée et de sortie
 - [ ] Vérifier les patterns de gestion d'erreur et retry
 
-**Livrables**
-```
-| Connecteur | Type | Endpoint | Auth | Input | Output | Async |
-|------------|------|----------|------|-------|--------|-------|
-| (À remplir selon audit) | - | - | - | - | - | - |
-```
 
 ---
 
@@ -147,12 +121,6 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Noter les configurations de timeout et de retry
 - [ ] Vérifier les patterns de signalement (success, failure, BPMN error)
 
-**Livrables**
-```
-| External Task | Topic | Worker | Timeout | Retry | Variables |
-|----------------|-------|--------|---------|-------|-----------|
-| (À remplir selon audit) | - | - | - | - | - |
-```
 
 ---
 
@@ -162,7 +130,7 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 - [ ] Vérifier les formats de sérialisation (primitifs, JSON, Java objects, Spin)
 - [ ] Analyser les patterns d'héritage et de portée (process, task-local, transient)
 
-**État actuel (tiré du PDF)**
+**État actuel ()**
 ```
 | Variable | Type | Source | Utilisée dans | Sérialisation |
 |----------|------|--------|---|---|
@@ -180,41 +148,21 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 ---
 
 #### 1.1.9 Recenser l'usage de l'history level, cleanup et handlers custom
-- [ ] Identifier le `history-level` configuré (full, activity, variable, auto, none)
-- [ ] Documenter les stratégies de nettoyage (cleanup tasks, archivage, rétention)
+- [ ] Identifier le `history-level` 
 - [ ] Lister les history event handlers custom
 - [ ] Vérifier les configurations de persistence (base de données, cache)
 - [ ] Noter les mécanismes d'audit et de compliance (logs, traces)
 
-**État actuel (tiré du PDF)**
-```
-| Paramètre | Valeur actuelle | Description |
-|-----------|-----------------|-------------|
-| history-level | À vérifier | full / auto / activity / none |
-| job-executor | Actif (défaut) | Gère les timers et événements asynchrones |
-| History handlers | À identifier | Custom event listeners |
-```
 
 **Point critique — History Level** : Si `history-level: full` est utilisé dans Camunda, l'historique complet des instances (variables, activités, durées) est stocké en base. **Kogito ne reproduit pas ce comportement nativement**. Le Data Index doit être déployé et configuré explicitement sur Kubernetes.
 
 ---
 
 #### 1.1.10 Recenser les plugins moteur, identity integrations et job executor settings
-- [ ] Lister tous les plugins moteur Camunda deployés
-- [ ] Documenter les intégrations d'identité (LDAP, Keycloak, basic auth, OAuth2)
-- [ ] Vérifier les configurations du job executor (core threads, max threads, queue size, retry)
+- [ ] Lister tous les plugins moteur Camunda deployés(pas de plugins deployés)
 - [ ] Identifier les process engine plugins et process application plugins
 - [ ] Noter les éventuels parsers ou validators custom
 
-**État actuel (tiré du PDF)**
-```
-| Paramètre | Camunda 7 | Équivalent Kogito |
-|-----------|-----------|-------------------|
-| history-level | À vérifier | Data Index (service K8s séparé) + PostgreSQL |
-| job-executor | Configuration défaut | Jobs Service (service K8s séparé) |
-| Identity / IAM | À documenter | Keycloak ou OIDC configuré dans l'app Kogito |
-| Plugins moteur | À identifier | Sans objet / À évaluer |
-```
 
 ---
 
@@ -232,28 +180,15 @@ Recenser tous les processus, DMN, forms, scripts, delegates, connectors, externa
 | Timers / Boundary events | Aucun identifié | 0 |
 | Sous-processus / Call activities | Aucun identifié | 0 |
 | External tasks | Aucun identifié | 0 |
-| DMN | À compléter | ? |
-| Scripts JSR-223 | À compléter | ? |
+
 
 ---
 
 ---
 
 ## Story 1.2 — Évaluer la complexité de migration par processus
-
-### Priorité
-⚠️ **HIGHEST**
-
-### Description
 Classer les processus par complexité de migration sur la base d'une grille de scoring standardisée. Identifier les processus candidats au pilote (quick wins) et ceux nécessitant une refonte partielle ou complète.
 
-### Acceptance Criteria
-- ✅ Grille de scoring de complexité définie et validée
-- ✅ Chaque processus a un score de migration
-- ✅ Heatmap de complexité produite (matrice visualisable)
-- ✅ Blockers majeurs identifiés et listés
-- ✅ Quick wins listés et priorisés
-- ✅ Processus incompatibles avec un simple portage sont flaggés
 
 ### Tasks
 
@@ -334,13 +269,7 @@ Classer les processus par complexité de migration sur la base d'une grille de s
 - [ ] Estimer l'effort (jours/hommes)
 - [ ] Grouper par thème métier
 
-**Modèle de rapport**
 
-```
-| Processus | Score | Points d'effort | Refonte requise | Dépendances | Priorité |
-|-----------|-------|-----------------|-----------------|-------------|----------|
-| (À remplir selon audit) | - | - | - | - | - |
-```
 
 ---
 
@@ -351,13 +280,6 @@ Classer les processus par complexité de migration sur la base d'une grille de s
 - [ ] Définir un plan de mitigation par processus
 - [ ] Préparer une justification métier/technique pour chaque bloquant
 
-**Modèle de rapport**
-
-```
-| Processus | Score | Bloquants | Options | Impact | Plan mitigation |
-|-----------|-------|-----------|---------|--------|-----------------|
-| (À remplir selon audit) | - | - | - | - | - |
-```
 
 ---
 
@@ -370,7 +292,6 @@ Classer les processus par complexité de migration sur la base d'une grille de s
 | Formulaires Camunda | 🟡 Moyen | 2 forms à réécrire en HTML/React |
 | Variables de processus | 🟢 Faible | Types simples (String) |
 | Timers et boundary events | 🟢 Faible | Aucun identifié |
-| Scripts JSR-223 | 🔴 À confirmer | À documenter lors de l'audit complet |
 | External tasks | 🟢 Faible | Aucun identifié |
 | Sous-processus | 🟢 Faible | Aucun identifié |
 | History / Audit | 🟡 À confirmer | History level à vérifier |
@@ -381,21 +302,7 @@ Classer les processus par complexité de migration sur la base d'une grille de s
 ---
 
 ## Story 1.3 — Définir la stratégie de coexistence Camunda/Kogito
-
-### Priorité
-⚠️ **HIGHEST**
-
-### Description
 Concevoir et valider la stratégie de transition entre le moteur source (Camunda 7) et le moteur cible (Kogito) pour assurer une migration fluide, sans coupure de service et avec possibilité de rollback.
-
-### Acceptance Criteria
-- ✅ Stratégie "new instances on Kogito / old instances on Camunda" **validée ou rejetée explicitement**
-- ✅ Scénario de cutover détaillé (date, versioning, communications)
-- ✅ Plan de rollback complet et testé (RTO, RPO définis)
-- ✅ Règles de routage documentées (feature flag, API Gateway, etc.)
-- ✅ Rôles et responsabilités clairs (tech lead, DBA, DevOps, métier)
-- ✅ Métriques de succès et critères de basculement définies
-- ✅ Points de synchronisation identifiés (historique, données, état)
 
 ### Tasks
 
@@ -430,7 +337,7 @@ Cette stratégie est la **seule viable** pour éviter une coupure de service. El
 
 #### 1.3.2 Définir le mode de routage des nouvelles instances
 
-**Option 1 : Feature flag applicatif** ✅ RECOMMANDÉE
+**Option 1 : Feature flag applicatif** 
 
 - **Description** : Variable de configuration dans le service appelant
 - **Implémentation** : `engine=kogito|camunda` dans `application.properties`
@@ -503,7 +410,7 @@ Cette stratégie est la **seule viable** pour éviter une coupure de service. El
 | **Archivage** | Exporter et archiver historique Camunda | 1 semaine | DBA | Historique complètement sauvegardé |
 | **Décommissionnement** | Arrêter Camunda 7 et libérer ressources | 1 jour | DevOps | Services de monitoring arrêtés |
 
-**Plan détaillé pré-cutover (J-5 à J0)**
+**Plan détaillé pré-cutover ()**
 
 ```
 J-5 : Freeze du code applicatif (stable branch)
@@ -714,56 +621,7 @@ Développement       Cutover (J0)               Archivage
 | **Support** | Escalade incidents, hotline | Support 24/7 pendant coexistence |
 | **Architecture** | Validation stratégie, design cutover | Validation plan de rollback |
 
----
 
-### Checklist pré-cutover
-
-- [ ] EPIC 3 complète : Kogito déployé et fonctionnel
-- [ ] Tests fonctionnels et régression : ✅ Passed
-- [ ] Feature flag implémenté et testé localement
-- [ ] Backup complet Camunda 7 (DEV, TEST, PROD)
-- [ ] War room : calendrier 24h post-cutover bloqué
-- [ ] Communication stakeholders : Notification J-5, J-1
-- [ ] Monitoring dual-moteur : Dashboards Prometheus/Grafana prêts
-- [ ] Plan rollback : Testé en stage
-- [ ] Procédure archivage : SQL scripts validés
-- [ ] SLA définis : RTO ≤ 2 min, RPO ≤ 5 min
-- [ ] Escalade : Points de contact 24/7 nommés
-- [ ] Sign-off métier + architecture + DevOps
-
----
-
----
-
-## Résumé exécutif EPIC 1
-
-### Objectif réalisé
-L'EPIC 1 établit les **fondations** de la migration Camunda 7 → Kogito par un inventaire exhaustif, une évaluation de complexité et une stratégie de coexistence robuste.
-
-### Livrables clés
-
-| Livrable | Status | Propriétaire |
-|----------|--------|--------------|
-| Inventaire assets Camunda 7 | ⏳ En cours (Story 1.1) | Tech Lead |
-| Grille de scoring & heatmap complexité | ⏳ En cours (Story 1.2) | Architecture |
-| Stratégie coexistence validée | ⏳ En cours (Story 1.3) | Architecture + Tech Lead |
-| Plan de cutover détaillé | 📋 À produire | DevOps |
-| Plan de rollback testé | 📋 À produire | SRE |
-| Processus candidat pilote identifié | ✅ DemandeServiceIT | Architecture |
-
-### Points critiques à valider
-
-1. **History Level Camunda** : Si `full`, le Data Index Kogito doit être déployé explicitement
-2. **Patterns Spin / Java objects** : Bloquant critique — à confirmer absent
-3. **Formulaires Camunda embedded** : Réécriture HTML/React obligatoire
-4. **Portage Java Delegates** : 3 delegates → REST nodes ou Work Item Handlers
-
-### Prochaines étapes (EPIC 2–3)
-
-- **EPIC 2** : Détail des processus, schéma mapping, documentation
-- **EPIC 3** : Développement et déploiement Kogito
-- **EPIC 4** : Cutover et monitoring
-- **EPIC 5** : Décommissionnement Camunda 7
 
 ---
 
@@ -791,30 +649,5 @@ L'EPIC 1 établit les **fondations** de la migration Camunda 7 → Kogito par un
 | **RTO** | Recovery Time Objective — durée pour revenir à la normale après incident |
 | **RPO** | Recovery Point Objective — quantité de données acceptable à perdre |
 
-### C. Modèles de templates
 
-#### Matrice des processus inventoriés
-```markdown
-| # | Processus | Score | Classification | Dépendances | Notes |
-|---|-----------|-------|-----------------|-------------|-------|
-| 1 | DemandeServiceIT | 11/63 | Quick Win | Aucune | Processus pilote |
-| 2 | (À compléter) | ? | ? | ? | ? |
-```
 
-#### Fiche de migration par processus
-```markdown
-## Processus : [NOM]
-- **Score** : X/63
-- **Classification** : FAIBLE | MOYEN | ÉLEVÉ
-- **Blockers** : Aucun | (liste)
-- **Assets à migrer** : BPMN, forms, delegates, etc.
-- **Responsable** : (Tech Lead)
-- **Timeline estimée** : (jours)
-- **Risques** : (liste)
-- **Plan mitigation** : (description)
-```
-
----
-
-**Document édité le 14 avril 2026**  
-**Version 1.0 — DRAFT**
