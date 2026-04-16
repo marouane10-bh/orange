@@ -301,325 +301,75 @@ Classer les processus par complexité de migration sur la base d'une grille de s
 
 ---
 
-## Story 1.3 — Définir la stratégie de coexistence Camunda/Kogito
-Concevoir et valider la stratégie de transition entre le moteur source (Camunda 7) et le moteur cible (Kogito) pour assurer une migration fluide, sans coupure de service et avec possibilité de rollback.
+# Story 1.3 — Stratégie de coexistence Camunda / Kogito
+Faire tourner Camunda et Kogito en parallèle pendant la migration, sans jamais couper le service.
 
+---
+
+## Principe : New instances on Kogito / Old instances on Camunda
+
+- Les **instances en cours** → continuent sur **Camunda 7** jusqu'à leur fin naturelle
+- Les **nouvelles instances** → partent directement sur **Kogito**
+- Les deux moteurs tournent en parallèle pendant **2 à 6 mois**
+- Camunda est éteint une fois qu'il n'a plus aucune instance active
+
+---
 ### Tasks
+## Comment router les instances ? — Le feature flag
 
-#### 1.3.1 Définir le mode coexistence
+Une simple ligne de configuration dans le service appelant :
 
-**Mode retenu : New instances on Kogito / Old instances on Camunda 7**
+```properties
+workflow.engine=kogito   # ou camunda
+```
 
-Cette stratégie est la **seule viable** pour éviter une coupure de service. Elle repose sur les principes suivants :
-
-1. **Instances en cours de Camunda** → Continuent à s'exécuter sur Camunda 7 jusqu'à leur **fin naturelle**
-2. **Nouvelles instances post-cutover** → Sont **routées vers Kogito**
-3. **Coexistence transitoire** → Les deux moteurs tournent en parallèle pendant une **période définie** (ex. 2–6 mois)
-4. **Décommissionnement progressif** → Camunda 7 est éteint une fois le parc d'instances actives à zéro
-
-**Avantages**
-- ✅ Zéro interruption de service
-- ✅ Risque de régression minimisé (instances critiques restent sur Camunda)
-- ✅ Possibilité de tester Kogito en environnement réel
-- ✅ Rollback trivial (switch du feature flag)
-
-**Inconvénients**
-- ⚠️ Exploitation de deux moteurs pendant 2–6 mois
-- ⚠️ Synchronisation des données entre moteurs (historique, audit)
-- ⚠️ Risque de dépendances non documentées entre instances
-
-**Alternatives rejetées**
-- ❌ **Big bang cutover** : Trop risqué, coupure de service garantie
-- ❌ **Processus par processus** : Trop complexe à orchestrer, dépendances inter-processus
-- ❌ **Shadow mode** (test passif) : Kogito tournant en parallèle sans traiter réellement — overkill pour ce cas
+- Activation en 30 secondes
+- Rollback instantané sans impact sur les instances en cours
+- Pas de changement d'infrastructure
 
 ---
 
-#### 1.3.2 Définir le mode de routage des nouvelles instances
+## Plan de cutover 
 
-**Option 1 : Feature flag applicatif** 
-
-- **Description** : Variable de configuration dans le service appelant
-- **Implémentation** : `engine=kogito|camunda` dans `application.properties`
-- **Complexité** : Faible
-- **Code exemple** :
-  ```java
-  String engine = env.getProperty("workflow.engine", "camunda");
-  if ("kogito".equals(engine)) {
-    return kogitoProcessStarter.start(request);
-  } else {
-    return camundaProcessStarter.start(request);
-  }
-  ```
-
-**Avantages**
-- ✅ Activable/désactivable en 2 min (redéploiement du service appelant)
-- ✅ Pas d'impact sur l'infrastructure
-- ✅ Rollback instantané
-- ✅ Testable localement
-
-**Inconvénients**
-- ⚠️ Requiert un redéploiement du service appelant
+| Étape | Quand | Action |
+|-------|-------|--------|
+| Freeze du code | J-5 | Plus de changement de code |
+| Backup Camunda | J-3 | Sauvegarde complète de la base |
+| Communication | J-1 | Mail à tous les stakeholders |
+| Activation | J0 à 14h | Feature flag `engine=kogito` activé |
+| Surveillance | J0 → J+1 | War room ouverte, monitoring continu |
+| Débrief | J+1 | Bilan technique et stabilisation |
 
 ---
 
-**Option 2 : API Gateway routing**
+## Plan de rollback (si ça bug)
 
-- **Description** : L'API Gateway redirige `/process/start` selon la cible (Camunda vs Kogito)
-- **Implémentation** : Règles de routage niveau Kong, Nginx, AWS API Gateway
-- **Complexité** : Moyenne
-- **Config exemple (Kong)** :
-  ```yaml
-  routes:
-    - name: process-camunda
-      paths: ["/process/start/camunda"]
-      upstream_url: http://camunda:8080
-    - name: process-kogito
-      paths: ["/process/start/kogito"]
-      upstream_url: http://kogito:8080
-  ```
+**Objectif : revenir à Camunda en moins de 2 minutes**
 
-**Avantages**
-- ✅ Zéro code change dans l'applicatif
-- ✅ Routage centralisé et monitarisable
+Déclencher le rollback si :
+- Kogito est DOWN plus de 5 minutes
+- Taux d'erreurs dépasse 5%
+- Variables de processus corrompues
+- Processus ne se terminent plus normalement
 
-**Inconvénients**
-- ⚠️ Configuration complexe au niveau infrastructure
-- ⚠️ Clients doivent connaître l'endpoint correct
-- ⚠️ Risque d'erreurs de configuration
+**Procédure :**
+1. Décision collective en war room (Tech Lead + métier)
+2. Remettre `engine=camunda` dans la config
+3. Redémarrer le service (`kubectl rollout restart`)
+4. Vérifier que les nouvelles instances vont bien sur Camunda
+5. Communiquer aux stakeholders
 
 ---
 
-**Recommandation finale** : **Feature flag applicatif**
-- Simple à implémenter et à tester
-- Pas de dépendance infra complexe
-- Contrôle fin au niveau de chaque service appelant
+## Quand éteindre Camunda définitivement ?
 
----
+Les 3 conditions à réunir :
 
-#### 1.3.3 Définir le plan de cutover
+1. **Zéro instance active** sur Camunda
+2. **Zéro incident critique** sur Kogito depuis le cutover
+3. **Historique Camunda archivé** et sauvegardé (export SQL vers S3)
 
-**Phases et timeline**
-
-| Phase | Étape | Durée | Responsable | Condition de succès |
-|-------|-------|-------|------------|-------------------|
-| **Préparation** | Déployer Kogito sur K8s avec processus porté (EPIC 3) | 2–3 semaines | Tech Lead + DevOps | DemandeServiceIT déployé et fonctionnel |
-| **Validation** | Tester fonctionnellement et en non-régression sur Kogito | 1–2 semaines | QA + métier | Tous les scénarios validés, zéro défauts bloquants |
-| **Activation** | Activer feature flag `engine=kogito` pour nouvelles instances | 1 jour | Tech Lead | Feature flag déployé, monitoring actif |
-| **Observation** | Laisser instances Camunda en cours se terminer naturellement | 2–6 mois | Support + Ops | Zéro instance active sur Camunda |
-| **Archivage** | Exporter et archiver historique Camunda | 1 semaine | DBA | Historique complètement sauvegardé |
-| **Décommissionnement** | Arrêter Camunda 7 et libérer ressources | 1 jour | DevOps | Services de monitoring arrêtés |
-
-**Plan détaillé pré-cutover ()**
-
-```
-J-5 : Freeze du code applicatif (stable branch)
-      Validation complète de la chaîne Kogito en prod-like
-      
-J-3 : Backup complet de la base Camunda 7 (PROD)
-      Vérification des procédures de rollback
-      
-J-2 : Communication à tous les stakeholders (métier, users)
-      Validation des plans d'escalade et support 24/7
-      
-J-1 : Reprise en charge des instances "anciennes" sur Camunda
-      Préparation des dashboards de monitoring dual-moteur
-      
-J0  : Activation du feature flag engine=kogito à H+X (ex. 14h00)
-      Monitoring continu : Kogito + Camunda
-      Surveillance des logs et des erreurs applicatives
-      
-J+1 : Débrief technique — prise en compte des incidents
-      Validation de la stabilité
-      Communication aux stakeholders
-```
-
-**Communication pré-cutover**
-
-- **J-10** : Notification stratégique (direction, support)
-- **J-5** : Notification opérationnelle (ops, support, métier)
-- **J-1** : Mail de confirmation cutover (tous stakeholders)
-- **Pendant** : War room en direct (Slack #incident, calls toutes les 30 min)
-- **J+1** : Débrief et bilan de santé
-
----
-
-#### 1.3.4 Définir le plan de rollback
-
-**Objectif** : En cas de dysfonctionnement sur Kogito après le cutover, revenir instantanément à Camunda 7 **sans impact sur les instances en cours**.
-
-**Trigger de rollback**
-
-Activer le rollback si l'une des conditions est réalisée :
-- 🔴 **Disponibilité** : Kogito DOWN > 5 min (SLA : 99.9%)
-- 🔴 **Erreur métier** : Taux d'erreurs > 5% (vs baseline < 0.5%)
-- 🔴 **Perte de données** : Variables de processus corrompues
-- 🔴 **Régression fonctionnelle** : Processus ne se terminent plus normalement
-- 🟡 **Dégradation** : Latence > 3× baseline (timeout utilisateurs)
-
-**Procédure de rollback (RTO = 2 minutes)**
-
-| # | Étape | Durée | Commande / Action |
-|---|-------|-------|-------------------|
-| 1 | Validation de la décision rollback | 2 min | War room : décision collective Tech Lead + responsable métier |
-| 2 | Désactivation feature flag | 30 sec | `engine=camunda` dans config, `kubectl rollout restart` service |
-| 3 | Vérification base Camunda | 30 sec | Health check : `/engine-rest/metrics` en 200 OK |
-| 4 | Monitoring dual-moteur | 2 min | Vérifier : nouvelles instances → Camunda, anciennes → Kogito |
-| 5 | Communication | 1 min | Mail/Slack : rollback complété, ETA retour Kogito |
-
-**État post-rollback**
-
-```
-Instances créées avant cutover → S'exécutent sur Camunda 7 (pas de changement)
-Instances créées pendant Kogito → Restent sur Kogito jusqu'à leur fin
-Nouvelles instances (après rollback) → Routées vers Camunda 7
-```
-
-**Point fort** : Grâce au feature flag, le rollback est **immédiat et sans impact** sur les instances en cours. Les instances Kogito continuent de s'exécuter normalement.
-
-**Métriques de succès rollback**
-- ✅ Feature flag désactivé < 1 min
-- ✅ RTO réalisé ≤ 2 min
-- ✅ Zéro nouvelle erreur post-rollback
-- ✅ Instances Kogito restantes se terminent correctement
-
----
-
-#### 1.3.5 Définir la stratégie de fin de vie Camunda 7
-
-**Règles de décommissionnement**
-
-| Condition | Action | Responsable | Délai |
-|-----------|--------|------------|-------|
-| **Zéro instance active sur Camunda** | Déclencher la procédure de décommissionnement | Tech Lead | Immédiat |
-| **Historique Camunda à archiver** | Export et archivage en base externe ou S3 | DBA / Ops | Avant arrêt |
-| **Infra Camunda (DB, server)** | Suppression après validation archivage | DevOps | 1 jour après archivage |
-
-**Procédure d'archivage historique (pré-shutdown)**
-
-**Point critique** : Kogito ne dispose **pas** d'un équivalent natif au History Service de Camunda 7. L'historique des instances Camunda doit être archivé avant le décommissionnement.
-
-| # | Étape | Outil | Cible |
-|---|-------|------|-------|
-| 1 | Export table ACT_HI_* (historique Camunda) | `mysqldump` / `pg_dump` | SQL dump |
-| 2 | Export des variables historiques | Requête SQL `SELECT * FROM ACT_HI_VARINST` | CSV / Parquet |
-| 3 | Compression et chiffrement | `gzip + GPG` | Archive |
-| 4 | Upload en stockage long terme | S3 / Azure Blob / archive DB | Immuable |
-| 5 | Validation de l'intégrité (checksum) | `sha256sum` | Logs |
-| 6 | Suppression des tables source | `DROP TABLE` | Audit trail |
-
-**Exemple SQL pour export**
-```sql
--- Backup complet ACT_HI_*
-mysqldump --single-transaction --set-gtid-purged=OFF \
-  camunda_db ACT_HI_PROCINST ACT_HI_ACTINST ACT_HI_VARINST \
-  > camunda_history_$(date +%Y%m%d).sql
-
--- Vérification export
-mysql -u user -p camunda_db < camunda_history_*.sql
-```
-
-**Stockage d'archive recommandé**
-- ✅ **S3 Glacier** : Faible coût, conservation long terme (7 ans+)
-- ✅ **PostgreSQL archiving** : Table `audit_camunda_history` séparée avec TTL
-- ✅ **Elasticsearch** : Pour requêtes d'audit, analyse d'impact
-
----
-
-#### 1.3.6 Définir les critères de bascule complète
-
-**Définition** : Moment où passer de "coexistence transitoire" à "Kogito seul".
-
-**Critères de bascule**
-
-| Critère | Seuil | Mesure | Status |
-|---------|-------|--------|--------|
-| **Instances actives Camunda** | = 0 | Requête : `SELECT COUNT(*) FROM ACT_RU_EXECUTION WHERE END_TIME IS NULL;` | À atteindre |
-| **Incidents Kogito en prod** | = 0 | Incidents critiques (P1) depuis cutover | À valider |
-| **Taux d'erreur Kogito** | < 0.5% | `(500 errors + timeouts) / total requests` | À respecter |
-| **Performance Kogito** | > 95e centile baseline | Latence p95 vs Camunda historique | À confirmer |
-| **Archivage historique Camunda** | 100% | Vérification des dumps SQL en S3 | À accomplir |
-| **Validation métier** | Approuvé | Sign-off responsable métier | À obtenir |
-
-**Process de validation bascule**
-
-```
-Jour N (instances = 0) :
-  ✓ Décision de bascule complète validée par steering committee
-  ✓ Sign-off métier, tech, support
-  ✓ Historique Camunda archivé et vérifié
-  ✓ War room : monitoring Kogito 24/7 pendant 48h
-  
-Jour N+2 :
-  ✓ Arrêt officiel Camunda 7 (après monitoring stable)
-  ✓ Decommissioning infrastructure
-  ✓ Documentation de clôture EPIC 1
-  
-Jour N+7 :
-  ✓ Leçons apprises (retro)
-  ✓ Archivage des données de migration
-```
-
----
-
-### Schéma de la stratégie de coexistence
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ TIMELINE DE MIGRATION CAMUNDA 7 → KOGITO                   │
-└─────────────────────────────────────────────────────────────┘
-
-      PHASE 1                  PHASE 2              PHASE 3
-   (Avant cutover)        (Coexistence)       (Décommissionnement)
-   ─────────────────      ─────────────────    ─────────────────
-       2–3 sem                 2–6 mois             1 sem
-
-Développement       Cutover (J0)               Archivage
-& Test         ──────────────→               ─────────→
-  Kogito                │              Instances = 0
-                        │
-     ├─ BPMN porté      │                  ├─ Export ACT_HI_*
-     ├─ Delegates       │                  ├─ Upload S3
-     ├─ Forms          │                  ├─ Validation
-     └─ Data Index     │                  └─ Vérification
-
-
-       ↓                ↓                      ↓
-    Camunda 7      Camunda 7 (OLD)          ARRÊT
-    EXISTANT       ├─ Instances en cours    Camunda 7
-                   │  se terminent
-                   │  naturellement
-                   │
-                   └─ Zéro impact
-
-
-                   Kogito (NEW)
-                   ├─ Nouvelles instances
-                   │  (feature flag = on)
-                   │
-                   └─ Monitoring 24/7
-
-
-                   ↓                          ↓
-             COEXISTENCE               Kogito SEUL
-             2 moteurs en              (Cloud-native)
-             parallèle
-
-```
-
----
-
-### Rôles et responsabilités
-
-| Rôle | Responsabilités | Lors du cutover |
-|-----|-----------------|-----------------|
-| **Tech Lead** | Validation technique, décision rollback, sign-off | War room, flag activation, rollback decision |
-| **DevOps / SRE** | Déploiements, infra K8s, monitoring | Activation, escalade monitoring |
-| **DBA** | Archivage données, backup Camunda | Backup pré-cutover, export historique |
-| **QA** | Tests fonctionnels, régression | Validation pré-cutover, suivi incidents |
-| **Métier** | Acceptation, communication users | Sign-off, validation métier |
-| **Support** | Escalade incidents, hotline | Support 24/7 pendant coexistence |
-| **Architecture** | Validation stratégie, design cutover | Validation plan de rollback |
+Une fois ces conditions validées → arrêt Camunda + libération de l'infrastructure.
 
 
 
@@ -633,21 +383,6 @@ Développement       Cutover (J0)               Archivage
 - [Kogito User Guide](https://kogito.kie.org/guides/)
 - [Kogito on Kubernetes](https://github.com/kiegroup/kogito-examples)
 - [Data Index Service](https://kogito.kie.org/guides/data-index-service/)
-
-### B. Glossaire
-
-| Terme | Définition |
-|-------|-----------|
-| **BPMN** | Business Process Model and Notation — standard de modélisation de processus |
-| **DMN** | Decision Model and Notation — standard pour les règles métier |
-| **JavaDelegate** | Classe Camunda implémentant la logique métier d'une service task |
-| **History Level** | Niveau de détail de l'historique des instances (full, activity, variable, none) |
-| **Work Item Handler** | Équivalent Kogito des JavaDelegate Camunda |
-| **Data Index** | Service Kogito qui remplace le History Service de Camunda 7 |
-| **Jobs Service** | Service Kogito qui remplace le Job Executor de Camunda 7 |
-| **Cutover** | Basculement des nouvelles instances de Camunda vers Kogito |
-| **RTO** | Recovery Time Objective — durée pour revenir à la normale après incident |
-| **RPO** | Recovery Point Objective — quantité de données acceptable à perdre |
 
 
 
