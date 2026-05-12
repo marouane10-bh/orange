@@ -1,17 +1,6 @@
 # EPIC 1 — Discovery & Assessment
 ## Story 1.1 : Inventaire des assets Camunda 7
 
-> Ce document recense tous les éléments identifiés dans les processus BPMN existants dans le cadre de la migration Camunda 7 → Kogito sur Kubernetes.
-
----
-
-## Sommaire
-
-- [Contexte](#contexte)
-- [Processus 1 — DemandeServiceIT](#processus-1--demandeserviceit)
-- [Processus 2 — CAAS Deploy Cluster](#processus-2--caas-deploy-cluster)
-- [Comparaison des complexités](#comparaison-des-complexités)
-- [Glossaire](#glossaire)
 
 ---
 
