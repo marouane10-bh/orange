@@ -320,7 +320,6 @@ Le processus ferme tous les dossiers : il marque le changement CAR comme implém
 
 | Terme | Définition simple |
 |---|---|
-| **BPMN** | Langage de dessin de processus métier — les boîtes et flèches que tu vois dans Camunda Modeler |
 | **Service Task** | Étape automatique exécutée par du code, sans intervention humaine |
 | **User Task** | Étape qui attend qu'un humain fasse quelque chose |
 | **External Task** | Service Task qui délègue son travail à un programme externe via un "topic" |
@@ -332,8 +331,6 @@ Le processus ferme tous les dossiers : il marque le changement CAR comme implém
 | **Timer Event** | Le processus s'arrête et attend un délai (ex : `PT15M` = 15 minutes) |
 | **Message Event** | Le processus attend qu'un système externe lui envoie un signal pour continuer |
 | **Variable de processus** | Donnée transportée par le processus d'une étape à l'autre |
-| **Camunda** | Moteur de workflow Java — un seul moteur central qui gère tous les processus |
-| **Kogito** | Framework Quarkus/Java — chaque processus devient sa propre application indépendante |
 | **Kubernetes (K8s)** | Système qui gère et orchestre les containers applicatifs |
 | **Rancher** | Interface de gestion de clusters Kubernetes |
 | **NSX-T** | Système de réseau virtuel VMware — crée des réseaux isolés par-dessus le réseau physique |
