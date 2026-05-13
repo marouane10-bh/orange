@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_05swqm1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.44.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.24.0">
+  <bpmn:process id="Process_0ibhzqd" name="DemandeServiceIT" isExecutable="true">
+    <bpmn:extensionElements />
+    <bpmn:startEvent id="StartEvent_1" name="StartService">
+      <bpmn:outgoing>Flow_01qtos3</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="DemandeService" name="Remplir demande de service IT" camunda:formRef="demandeServiceform" camunda:formRefBinding="deployment">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_01qtos3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0aa10ko</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Provisionning" name="Provisioning automatique(d&#39;API)" camunda:class="com.it.workflow.ProvisioningDelegate">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0v7gtvv</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lm7x68</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_01qtos3" sourceRef="StartEvent_1" targetRef="DemandeService" />
+    <bpmn:userTask id="DemandValidation" name="Valider la demande">
+      <bpmn:incoming>Flow_0aa10ko</bpmn:incoming>
+      <bpmn:outgoing>Flow_1je0mup</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0aa10ko" sourceRef="DemandeService" targetRef="DemandValidation" />
+    <bpmn:serviceTask id="Notify" name="Notifier refus" camunda:class="com.it.workflow.NotifyDelegate">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1n5fiwl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bpon8e</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_0bxj5hy" name="CloseService">
+      <bpmn:incoming>Flow_1bpon8e</bpmn:incoming>
+      <bpmn:incoming>Flow_0aarc1z</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1bpon8e" sourceRef="Notify" targetRef="Event_0bxj5hy" />
+    <bpmn:exclusiveGateway id="Gateway_1ydcmxd" name="Decision">
+      <bpmn:incoming>Flow_1je0mup</bpmn:incoming>
+      <bpmn:outgoing>Flow_1n5fiwl</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0v7gtvv</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1je0mup" sourceRef="DemandValidation" targetRef="Gateway_1ydcmxd" />
+    <bpmn:sequenceFlow id="Flow_1n5fiwl" name="Rejected" sourceRef="Gateway_1ydcmxd" targetRef="Notify">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0v7gtvv" name="Accepted" sourceRef="Gateway_1ydcmxd" targetRef="Provisionning">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0lm7x68" sourceRef="Provisionning" targetRef="Activity_0hkai3r" />
+    <bpmn:serviceTask id="Activity_0hkai3r" name="Notifier succès" camunda:class="com.it.workflow.SuccessDelegate">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0lm7x68</bpmn:incoming>
+      <bpmn:outgoing>Flow_0aarc1z</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0aarc1z" sourceRef="Activity_0hkai3r" targetRef="Event_0bxj5hy" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ibhzqd">
+      <bpmndi:BPMNShape id="Gateway_1ydcmxd_di" bpmnElement="Gateway_1ydcmxd" isMarkerVisible="true">
+        <dc:Bounds x="535" y="195" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="594.5" y="213" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0i6ajs6_di" bpmnElement="Provisionning">
+        <dc:Bounds x="640" y="270" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0jic5dj_di" bpmnElement="DemandValidation">
+        <dc:Bounds x="400" y="180" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="162" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="151" y="245" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0s26wou_di" bpmnElement="DemandeService">
+        <dc:Bounds x="253" y="180" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hkai3r_di" bpmnElement="Activity_0hkai3r">
+        <dc:Bounds x="810" y="270" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0bxj5hy_di" bpmnElement="Event_0bxj5hy">
+        <dc:Bounds x="1062" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1107" y="213" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_06olnv4_di" bpmnElement="Notify">
+        <dc:Bounds x="640" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_01qtos3_di" bpmnElement="Flow_01qtos3">
+        <di:waypoint x="198" y="220" />
+        <di:waypoint x="253" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0aa10ko_di" bpmnElement="Flow_0aa10ko">
+        <di:waypoint x="353" y="220" />
+        <di:waypoint x="400" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bpon8e_di" bpmnElement="Flow_1bpon8e">
+        <di:waypoint x="740" y="120" />
+        <di:waypoint x="1080" y="120" />
+        <di:waypoint x="1080" y="202" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1je0mup_di" bpmnElement="Flow_1je0mup">
+        <di:waypoint x="500" y="220" />
+        <di:waypoint x="535" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1n5fiwl_di" bpmnElement="Flow_1n5fiwl">
+        <di:waypoint x="560" y="195" />
+        <di:waypoint x="560" y="120" />
+        <di:waypoint x="640" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="123" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0v7gtvv_di" bpmnElement="Flow_0v7gtvv">
+        <di:waypoint x="560" y="245" />
+        <di:waypoint x="560" y="310" />
+        <di:waypoint x="640" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="567" y="293" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lm7x68_di" bpmnElement="Flow_0lm7x68">
+        <di:waypoint x="740" y="310" />
+        <di:waypoint x="810" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0aarc1z_di" bpmnElement="Flow_0aarc1z">
+        <di:waypoint x="910" y="310" />
+        <di:waypoint x="1080" y="310" />
+        <di:waypoint x="1080" y="238" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
