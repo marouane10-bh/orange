@@ -1,0 +1,1758 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0d7cvoe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.44.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="deploy-cluster" name="CAAS - Deploy CaaS Cluster" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0wbxq4b</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0wbxq4b" sourceRef="StartEvent_1" targetRef="inform-portal-planned" />
+    <bpmn:serviceTask id="inform-portal-planned" name="Inform Portal PLANNED" camunda:type="external" camunda:topic="update-status-portal-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="requestStatus">PLANNED</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wbxq4b</bpmn:incoming>
+      <bpmn:outgoing>Flow_0rcftjf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:eventBasedGateway id="Gateway_0x0g0b5">
+      <bpmn:incoming>Flow_0rcftjf</bpmn:incoming>
+      <bpmn:incoming>Flow_0jai4vk</bpmn:incoming>
+      <bpmn:outgoing>Flow_09rv9g3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_12ffxxg</bpmn:outgoing>
+      <bpmn:outgoing>Flow_12m36tr</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:intermediateCatchEvent id="Event_149k85e">
+      <bpmn:incoming>Flow_09rv9g3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jai4vk</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1ao193a" messageRef="Message_0vlhlmo" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateCatchEvent id="Event_1ambr5t">
+      <bpmn:incoming>Flow_12ffxxg</bpmn:incoming>
+      <bpmn:outgoing>Flow_1f2eccr</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1fsqt4n" messageRef="Message_0akaeu0" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="inform-portal-cancelled" name="Inform Portal CANCELLED" camunda:type="external" camunda:topic="update-status-portal-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="requestStatus">CANCELLED</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1f2eccr</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vs1aux</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1iidaez">
+      <bpmn:incoming>Flow_1vs1aux</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1vs1aux" sourceRef="inform-portal-cancelled" targetRef="Event_1iidaez" />
+    <bpmn:intermediateCatchEvent id="Event_0im3y6t">
+      <bpmn:incoming>Flow_12m36tr</bpmn:incoming>
+      <bpmn:outgoing>Flow_1kiawyp</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_19buxn9">
+        <bpmn:timeDate xsi:type="bpmn:tFormalExpression">${requestedDate}</bpmn:timeDate>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="inform-portal-processing" name="Inform Portal PROCESSING" camunda:type="external" camunda:topic="update-status-portal-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="requestStatus">PROCESSING</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1kiawyp</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ijm5cb</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0rcftjf" sourceRef="inform-portal-planned" targetRef="Gateway_0x0g0b5" />
+    <bpmn:sequenceFlow id="Flow_09rv9g3" sourceRef="Gateway_0x0g0b5" targetRef="Event_149k85e" />
+    <bpmn:sequenceFlow id="Flow_0jai4vk" sourceRef="Event_149k85e" targetRef="Gateway_0x0g0b5" />
+    <bpmn:sequenceFlow id="Flow_12ffxxg" sourceRef="Gateway_0x0g0b5" targetRef="Event_1ambr5t" />
+    <bpmn:sequenceFlow id="Flow_1f2eccr" sourceRef="Event_1ambr5t" targetRef="inform-portal-cancelled" />
+    <bpmn:sequenceFlow id="Flow_12m36tr" sourceRef="Gateway_0x0g0b5" targetRef="Event_0im3y6t" />
+    <bpmn:sequenceFlow id="Flow_1kiawyp" sourceRef="Event_0im3y6t" targetRef="inform-portal-processing" />
+    <bpmn:intermediateCatchEvent id="Event_074shxi" name="Wait 15 min">
+      <bpmn:incoming>Flow_042rs2r</bpmn:incoming>
+      <bpmn:outgoing>Flow_1exbzmp</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1gytvmx">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1exbzmp" sourceRef="Event_074shxi" targetRef="car-so-validation" />
+    <bpmn:exclusiveGateway id="Gateway_1v7wyil" name="done?">
+      <bpmn:incoming>Flow_18yz83n</bpmn:incoming>
+      <bpmn:outgoing>Flow_042rs2r</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1sj18mf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_18yz83n" sourceRef="car-so-validation" targetRef="Gateway_1v7wyil" />
+    <bpmn:sequenceFlow id="Flow_042rs2r" name="No" sourceRef="Gateway_1v7wyil" targetRef="Event_074shxi">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateCatchEvent id="Event_1c65bzs" name="Wait 15min">
+      <bpmn:incoming>Flow_1anbe5q</bpmn:incoming>
+      <bpmn:outgoing>Flow_1noughb</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1faaoth">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1noughb" sourceRef="Event_1c65bzs" targetRef="car-ntss-validation" />
+    <bpmn:exclusiveGateway id="Gateway_1am5lic" name="done?">
+      <bpmn:incoming>Flow_11zr1jf</bpmn:incoming>
+      <bpmn:outgoing>Flow_1anbe5q</bpmn:outgoing>
+      <bpmn:outgoing>Flow_06xv0th</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_11zr1jf" sourceRef="car-ntss-validation" targetRef="Gateway_1am5lic" />
+    <bpmn:sequenceFlow id="Flow_1anbe5q" name="No" sourceRef="Gateway_1am5lic" targetRef="Event_1c65bzs">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_0a5osfc" name="done?">
+      <bpmn:incoming>Flow_07pjivw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0633n0z</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1epzv2i</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_07pjivw" sourceRef="car-nsd-validatoin" targetRef="Gateway_0a5osfc" />
+    <bpmn:subProcess id="nsxt-create-inventory-groups" name="NSX-T - Inventory groups creation&#10;&#10;">
+      <bpmn:incoming>Flow_1quizbl</bpmn:incoming>
+      <bpmn:outgoing>Flow_0vcip1s</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="igList" camunda:elementVariable="igCode" />
+      <bpmn:startEvent id="Event_0v6lgc7">
+        <bpmn:outgoing>Flow_0pm1oci</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:endEvent id="Event_00qx3ux">
+        <bpmn:incoming>Flow_0boco41</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:serviceTask id="nsxt-create-inventory-group" name="Create Inventory Group" camunda:type="external" camunda:topic="create-inventory-group-topic">
+        <bpmn:incoming>Flow_0pm1oci</bpmn:incoming>
+        <bpmn:outgoing>Flow_0boco41</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0boco41" sourceRef="nsxt-create-inventory-group" targetRef="Event_00qx3ux" />
+      <bpmn:sequenceFlow id="Flow_0pm1oci" sourceRef="Event_0v6lgc7" targetRef="nsxt-create-inventory-group" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="nsxt-vip-server-pool-creation-loop">
+      <bpmn:incoming>Flow_0vcip1s</bpmn:incoming>
+      <bpmn:outgoing>Flow_1li595c</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="taintsWithVip" camunda:elementVariable="taint" />
+      <bpmn:startEvent id="Event_1ccwpsu">
+        <bpmn:outgoing>Flow_0piopr2</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:endEvent id="Event_15xmxj9">
+        <bpmn:incoming>Flow_106n45c</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_106n45c" sourceRef="nsxt-vip-server-pool-creation" targetRef="Event_15xmxj9" />
+      <bpmn:sequenceFlow id="Flow_0piopr2" sourceRef="Event_1ccwpsu" targetRef="nsxt-vip-server-pool-creation" />
+      <bpmn:serviceTask id="nsxt-vip-server-pool-creation" name="Create Server Pool" camunda:type="external" camunda:topic="create-server-pool-topic">
+        <bpmn:incoming>Flow_0piopr2</bpmn:incoming>
+        <bpmn:outgoing>Flow_106n45c</bpmn:outgoing>
+      </bpmn:serviceTask>
+    </bpmn:subProcess>
+    <bpmn:subProcess id="nsxt-vip-virtual-servers-creation-loop">
+      <bpmn:incoming>Flow_1li595c</bpmn:incoming>
+      <bpmn:outgoing>Flow_0t01581</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="taintsWithVip" camunda:elementVariable="taint" />
+      <bpmn:startEvent id="Event_0vpnkms">
+        <bpmn:outgoing>Flow_0x7wrg9</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:endEvent id="Event_17qe6yc">
+        <bpmn:incoming>Flow_1nnzm1b</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_1nnzm1b" sourceRef="nsxt-vip-virtual-servers-creation" targetRef="Event_17qe6yc" />
+      <bpmn:sequenceFlow id="Flow_0x7wrg9" sourceRef="Event_0vpnkms" targetRef="nsxt-vip-virtual-servers-creation" />
+      <bpmn:serviceTask id="nsxt-vip-virtual-servers-creation" name="Create Virtual Server" camunda:type="external" camunda:topic="create-virtual-server-topic">
+        <bpmn:incoming>Flow_0x7wrg9</bpmn:incoming>
+        <bpmn:outgoing>Flow_1nnzm1b</bpmn:outgoing>
+      </bpmn:serviceTask>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_0t01581" sourceRef="nsxt-vip-virtual-servers-creation-loop" targetRef="fill-rancher-informations" />
+    <bpmn:sequenceFlow id="Flow_0lq5sc7" sourceRef="rancher-revision-without-s3" targetRef="rancher-revision-with-s3" />
+    <bpmn:sequenceFlow id="Flow_0jnn2ge" sourceRef="rancher-revision-with-s3" targetRef="rancher-empty-cluster" />
+    <bpmn:intermediateCatchEvent id="Event_0q8nk2l" name="Wait 15min">
+      <bpmn:incoming>Flow_1uy0f2a</bpmn:incoming>
+      <bpmn:outgoing>Flow_0tfbfek</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1rlvtfu">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_1uv2yr4" name="done?">
+      <bpmn:incoming>Flow_0fxz3bx</bpmn:incoming>
+      <bpmn:outgoing>Flow_05p5gjy</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1uy0f2a</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_062u7l8" name="done?">
+      <bpmn:incoming>Flow_1wflk1g</bpmn:incoming>
+      <bpmn:outgoing>Flow_0t3kfz5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0um6hq1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Event_0fdvevk" name="Wait 1 min">
+      <bpmn:incoming>Flow_0t3kfz5</bpmn:incoming>
+      <bpmn:outgoing>Flow_1s69ff2</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1le0et3">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_1vvnd9a" name="done?">
+      <bpmn:incoming>Flow_1iglz4p</bpmn:incoming>
+      <bpmn:outgoing>Flow_083hbva</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1mlddfj</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_1o3jhkp" name="done?">
+      <bpmn:incoming>Flow_09mq2rj</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bvcm49</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1v63s3t</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Event_1ofqdq8" name="Wait 1min">
+      <bpmn:incoming>Flow_083hbva</bpmn:incoming>
+      <bpmn:outgoing>Flow_1p9usmp</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1wk2775">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_1i67yfk" name="done?">
+      <bpmn:incoming>Flow_12qd6qj</bpmn:incoming>
+      <bpmn:outgoing>Flow_04t9tgl</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1w543za</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Event_1kn6yf0" name="Wait 2min">
+      <bpmn:incoming>Flow_04t9tgl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1grxola</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1anears">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="inform-portal-completed" name="Inform Portal COMPLETED" camunda:type="external" camunda:topic="update-status-portal-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="requestStatus">COMPLETED</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0msl2qj</bpmn:incoming>
+      <bpmn:outgoing>Flow_1mxpi2g</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1czi9u5">
+      <bpmn:incoming>Flow_1mxpi2g</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="car-creation" name="-- FAKE --&#10;Create CAR&#10;" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:incoming>Flow_1ijm5cb</bpmn:incoming>
+      <bpmn:outgoing>Flow_0omldcz</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1li595c" sourceRef="nsxt-vip-server-pool-creation-loop" targetRef="nsxt-vip-virtual-servers-creation-loop" />
+    <bpmn:subProcess id="rancher-node-template-creation-loop" name="Create Node Templates">
+      <bpmn:incoming>Flow_1s366t2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yxherx</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="nodes" camunda:elementVariable="node" />
+      <bpmn:startEvent id="Event_1hyy66f">
+        <bpmn:outgoing>Flow_0xj8zad</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sequenceFlow id="Flow_0xj8zad" sourceRef="Event_1hyy66f" targetRef="rancher-node-template-creation" />
+      <bpmn:endEvent id="Event_10if411">
+        <bpmn:incoming>Flow_1rwoyzy</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_1rwoyzy" sourceRef="rancher-node-template-creation" targetRef="Event_10if411" />
+      <bpmn:serviceTask id="rancher-node-template-creation" name="Create Node Template" camunda:type="external" camunda:topic="create-node-template-topic">
+        <bpmn:incoming>Flow_0xj8zad</bpmn:incoming>
+        <bpmn:outgoing>Flow_1rwoyzy</bpmn:outgoing>
+      </bpmn:serviceTask>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_1s366t2" sourceRef="s3-bucket-creation" targetRef="rancher-node-template-creation-loop" />
+    <bpmn:exclusiveGateway id="Gateway_1p8ytqf" name="done?">
+      <bpmn:incoming>Flow_050m6f4</bpmn:incoming>
+      <bpmn:outgoing>Flow_05wzr1z</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1vzf15m</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1yobqj6" sourceRef="cluster-without-s3-status" targetRef="nodes-status-without-s3" />
+    <bpmn:sequenceFlow id="Flow_05wzr1z" name="No" sourceRef="Gateway_1p8ytqf" targetRef="Event_05vl6mj">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isClusterReady == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateCatchEvent id="Event_05vl6mj" name="Wait 15min">
+      <bpmn:incoming>Flow_05wzr1z</bpmn:incoming>
+      <bpmn:outgoing>Flow_0fqabxv</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1f20qwa">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_0fqabxv" sourceRef="Event_05vl6mj" targetRef="cluster-without-s3-status" />
+    <bpmn:sequenceFlow id="Flow_1vzf15m" name="Yes" sourceRef="Gateway_1p8ytqf" targetRef="cluster-updating-with-s3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isClusterReady == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1wflk1g" sourceRef="rancher-storage-class-status" targetRef="Gateway_062u7l8" />
+    <bpmn:sequenceFlow id="Flow_0t3kfz5" name="No" sourceRef="Gateway_062u7l8" targetRef="Event_0fdvevk">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isStorageClassReady == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1mxpi2g" sourceRef="inform-portal-completed" targetRef="Event_1czi9u5" />
+    <bpmn:sequenceFlow id="Flow_0um6hq1" name="Yes" sourceRef="Gateway_062u7l8" targetRef="pvc-creation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isStorageClassReady == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1iglz4p" sourceRef="rancher-volume-status" targetRef="Gateway_1vvnd9a" />
+    <bpmn:sequenceFlow id="Flow_083hbva" name="No" sourceRef="Gateway_1vvnd9a" targetRef="Event_1ofqdq8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isPvcReady == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1mlddfj" name="Yes" sourceRef="Gateway_1vvnd9a" targetRef="rancher-s3-snapshot-status">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isPvcReady == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_09mq2rj" sourceRef="rancher-s3-snapshot-status" targetRef="Gateway_1o3jhkp" />
+    <bpmn:sequenceFlow id="Flow_0bvcm49" name="No" sourceRef="Gateway_1o3jhkp" targetRef="Event_1gtojxd">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isS3Ready == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1v63s3t" name="Yes" sourceRef="Gateway_1o3jhkp" targetRef="rancher-launch-resilency-tests">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isS3Ready == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_12qd6qj" sourceRef="rancher-resilency-tests-status" targetRef="Gateway_1i67yfk" />
+    <bpmn:intermediateCatchEvent id="Event_1gtojxd" name="Wait 2min">
+      <bpmn:incoming>Flow_0bvcm49</bpmn:incoming>
+      <bpmn:outgoing>Flow_0dpeztk</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0nh0ssb">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1grxola" sourceRef="Event_1kn6yf0" targetRef="rancher-resilency-tests-status" />
+    <bpmn:sequenceFlow id="Flow_0vcip1s" sourceRef="nsxt-create-inventory-groups" targetRef="nsxt-vip-server-pool-creation-loop" />
+    <bpmn:serviceTask id="car-so-validation" name="-- FAKE --&#10;CAR Status SO Validation" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:incoming>Flow_1exbzmp</bpmn:incoming>
+      <bpmn:incoming>Flow_0omldcz</bpmn:incoming>
+      <bpmn:outgoing>Flow_18yz83n</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="car-ntss-validation" name="--FAKE--&#10;CAR Status NTSS Validation" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:incoming>Flow_1noughb</bpmn:incoming>
+      <bpmn:incoming>Flow_1sj18mf</bpmn:incoming>
+      <bpmn:outgoing>Flow_11zr1jf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="car-nsd-validatoin" name="--FAKE--&#10;CAR Status NSD Validation" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:incoming>Flow_1iynmq7</bpmn:incoming>
+      <bpmn:incoming>Flow_06xv0th</bpmn:incoming>
+      <bpmn:outgoing>Flow_07pjivw</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="fill-nsxt-informations" name="Fill NSX-T information" camunda:type="external" camunda:topic="fill-nsxt-information-topic">
+      <bpmn:incoming>Flow_0633n0z</bpmn:incoming>
+      <bpmn:outgoing>Flow_1quizbl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rancher-revision-without-s3" name="Create RKE template without S3" camunda:type="external" camunda:topic="create-template-revision-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="revision">withoutS3</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hpmqjl</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lq5sc7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rancher-revision-with-s3" name="--FAKE--&#10;Create RKE Template With S3" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="revision">withS3</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0lq5sc7</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jnn2ge</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="cluster-without-s3-status" name="Cluster Status" camunda:type="external" camunda:topic="get-cluster-status-topic">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0fqabxv</bpmn:incoming>
+      <bpmn:incoming>Flow_1tukm7n</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yobqj6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1xj96db" sourceRef="cluster-updating-with-s3" targetRef="cluster-with-s3-status" />
+    <bpmn:intermediateCatchEvent id="Event_0ac2hgk" name="Wait 15min">
+      <bpmn:incoming>Flow_0af6xfw</bpmn:incoming>
+      <bpmn:outgoing>Flow_169tgil</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1f3j21j">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_169tgil" sourceRef="Event_0ac2hgk" targetRef="cluster-with-s3-status" />
+    <bpmn:exclusiveGateway id="Gateway_03c9eob" name="done?">
+      <bpmn:incoming>Flow_0zdlgmo</bpmn:incoming>
+      <bpmn:outgoing>Flow_0af6xfw</bpmn:outgoing>
+      <bpmn:outgoing>Flow_103y1xp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0ejmbtv" sourceRef="cluster-with-s3-status" targetRef="nodes-status-with-s3" />
+    <bpmn:sequenceFlow id="Flow_0af6xfw" name="No" sourceRef="Gateway_03c9eob" targetRef="Event_0ac2hgk">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isClusterReady == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_103y1xp" name="Yes" sourceRef="Gateway_03c9eob" targetRef="create-project">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isClusterReady == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="rancher-storage-class-status" name="Storage Class Status" camunda:type="external" camunda:topic="storage-class-status-topic">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1s69ff2</bpmn:incoming>
+      <bpmn:incoming>Flow_05vdxkp</bpmn:incoming>
+      <bpmn:outgoing>Flow_1wflk1g</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rancher-volume-status" name="PVC Status" camunda:type="external" camunda:topic="pvc-status-topic">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1p9usmp</bpmn:incoming>
+      <bpmn:incoming>Flow_1okwomj</bpmn:incoming>
+      <bpmn:outgoing>Flow_1iglz4p</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rancher-launch-resilency-tests" name="--FAKE--&#10;Launch Resiliency Tests" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:incoming>Flow_1v63s3t</bpmn:incoming>
+      <bpmn:outgoing>Flow_030jdij</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="car-opctech-implementation" name="--FAKE--&#10;CAR Status NTSS Implementation" camunda:type="external" camunda:topic="fake-topic">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0tfbfek</bpmn:incoming>
+      <bpmn:incoming>Flow_1w543za</bpmn:incoming>
+      <bpmn:outgoing>Flow_0fxz3bx</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0633n0z" name="Yes" sourceRef="Gateway_0a5osfc" targetRef="fill-nsxt-informations">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1quizbl" sourceRef="fill-nsxt-informations" targetRef="nsxt-create-inventory-groups" />
+    <bpmn:serviceTask id="fill-rancher-informations" name="Fill Rancher Informations" camunda:type="external" camunda:topic="fill-rancher-information-topic">
+      <bpmn:incoming>Flow_0t01581</bpmn:incoming>
+      <bpmn:outgoing>Flow_09ivt5h</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rancher-create-empty-rke-template" name="Create Empty RKE Template" camunda:type="external" camunda:topic="create-rke-template-topic">
+      <bpmn:incoming>Flow_0yxherx</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hpmqjl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0yxherx" sourceRef="rancher-node-template-creation-loop" targetRef="rancher-create-empty-rke-template" />
+    <bpmn:sequenceFlow id="Flow_1hpmqjl" sourceRef="rancher-create-empty-rke-template" targetRef="rancher-revision-without-s3" />
+    <bpmn:serviceTask id="rancher-empty-cluster" name="Create Empty Cluster" camunda:type="external" camunda:topic="create-cluster-topic">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="revision">withoutS3</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0jnn2ge</bpmn:incoming>
+      <bpmn:outgoing>Flow_0icmjuu</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:subProcess id="rancher-create-node-pools" name="Rancher - create node pools">
+      <bpmn:incoming>Flow_0icmjuu</bpmn:incoming>
+      <bpmn:outgoing>Flow_1tukm7n</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="nodes" camunda:elementVariable="node" />
+      <bpmn:startEvent id="Event_1wrjvr0">
+        <bpmn:outgoing>Flow_0kxoxny</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="rancher-create-node-pool" name="Create Node Pool" camunda:type="external" camunda:topic="create-node-pool-topic">
+        <bpmn:incoming>Flow_0kxoxny</bpmn:incoming>
+        <bpmn:outgoing>Flow_0pernqg</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_0kxoxny" sourceRef="Event_1wrjvr0" targetRef="rancher-create-node-pool" />
+      <bpmn:endEvent id="Event_15a11w4">
+        <bpmn:incoming>Flow_0pernqg</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_0pernqg" sourceRef="rancher-create-node-pool" targetRef="Event_15a11w4" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_0icmjuu" sourceRef="rancher-empty-cluster" targetRef="rancher-create-node-pools" />
+    <bpmn:sequenceFlow id="Flow_1tukm7n" sourceRef="rancher-create-node-pools" targetRef="cluster-without-s3-status" />
+    <bpmn:sequenceFlow id="Flow_1s69ff2" sourceRef="Event_0fdvevk" targetRef="rancher-storage-class-status" />
+    <bpmn:sequenceFlow id="Flow_1p9usmp" sourceRef="Event_1ofqdq8" targetRef="rancher-volume-status" />
+    <bpmn:sequenceFlow id="Flow_0dpeztk" sourceRef="Event_1gtojxd" targetRef="rancher-s3-snapshot-status" />
+    <bpmn:sequenceFlow id="Flow_030jdij" sourceRef="rancher-launch-resilency-tests" targetRef="rancher-resilency-tests-status" />
+    <bpmn:sequenceFlow id="Flow_04t9tgl" name="No" sourceRef="Gateway_1i67yfk" targetRef="Event_1kn6yf0">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isResiliencyTestsOk == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0tfbfek" sourceRef="Event_0q8nk2l" targetRef="car-opctech-implementation" />
+    <bpmn:sequenceFlow id="Flow_0fxz3bx" sourceRef="car-opctech-implementation" targetRef="Gateway_1uv2yr4" />
+    <bpmn:sequenceFlow id="Flow_05p5gjy" name="Yes" sourceRef="Gateway_1uv2yr4" targetRef="email-notification-deployment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="cluster-updating-with-s3" name="Update Cluster with S3">
+      <bpmn:incoming>Flow_1vzf15m</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xj96db</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="s3-bucket-creation" name="Create Bucket">
+      <bpmn:incoming>Flow_1yd6fmp</bpmn:incoming>
+      <bpmn:incoming>Flow_00mluyz</bpmn:incoming>
+      <bpmn:outgoing>Flow_1s366t2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0zdlgmo" sourceRef="nodes-status-with-s3" targetRef="Gateway_03c9eob" />
+    <bpmn:sequenceFlow id="Flow_147ohep" sourceRef="create-project" targetRef="update-project" />
+    <bpmn:serviceTask id="create-project" name="Create Project" camunda:type="external" camunda:topic="create-project-topic">
+      <bpmn:incoming>Flow_103y1xp</bpmn:incoming>
+      <bpmn:outgoing>Flow_147ohep</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="cluster-with-s3-status" name="Cluster status" camunda:type="external" camunda:topic="get-cluster-status-topic">
+      <bpmn:incoming>Flow_1xj96db</bpmn:incoming>
+      <bpmn:incoming>Flow_169tgil</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ejmbtv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="nodes-status-with-s3" name="Nodes status" camunda:type="external" camunda:topic="get-nodes-status-from-cluster-topic">
+      <bpmn:incoming>Flow_0ejmbtv</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zdlgmo</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="nodes-status-without-s3" name="Nodes status" camunda:type="external" camunda:topic="get-nodes-status-from-cluster-topic">
+      <bpmn:incoming>Flow_1yobqj6</bpmn:incoming>
+      <bpmn:outgoing>Flow_050m6f4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_050m6f4" sourceRef="nodes-status-without-s3" targetRef="Gateway_1p8ytqf" />
+    <bpmn:sequenceFlow id="Flow_0omldcz" sourceRef="car-creation" targetRef="car-so-validation" />
+    <bpmn:sequenceFlow id="Flow_1ijm5cb" sourceRef="inform-portal-processing" targetRef="car-creation" />
+    <bpmn:sequenceFlow id="Flow_1sj18mf" name="Yes" sourceRef="Gateway_1v7wyil" targetRef="car-ntss-validation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateCatchEvent id="Event_04vu2hz" name="Wait 15 min">
+      <bpmn:incoming>Flow_1epzv2i</bpmn:incoming>
+      <bpmn:outgoing>Flow_1iynmq7</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1iir5pf">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1iynmq7" sourceRef="Event_04vu2hz" targetRef="car-nsd-validatoin" />
+    <bpmn:sequenceFlow id="Flow_1epzv2i" name="No" sourceRef="Gateway_0a5osfc" targetRef="Event_04vu2hz">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_06xv0th" name="Yes" sourceRef="Gateway_1am5lic" targetRef="car-nsd-validatoin">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1w543za" name="Yes" sourceRef="Gateway_1i67yfk" targetRef="car-opctech-implementation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isResiliencyTestsOk == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1uy0f2a" name="No" sourceRef="Gateway_1uv2yr4" targetRef="Event_0q8nk2l">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isAvailable == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="storage-class-creation" name="Storage Class Creation" camunda:type="external" camunda:topic="create-storage-class-topic">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_0y3a48z</bpmn:incoming>
+      <bpmn:outgoing>Flow_05vdxkp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_05vdxkp" sourceRef="storage-class-creation" targetRef="rancher-storage-class-status" />
+    <bpmn:serviceTask id="pvc-creation" name="Test PVC creation" camunda:type="external" camunda:topic="create-pvc-topic">
+      <bpmn:incoming>Flow_0um6hq1</bpmn:incoming>
+      <bpmn:outgoing>Flow_1okwomj</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1okwomj" sourceRef="pvc-creation" targetRef="rancher-volume-status" />
+    <bpmn:userTask id="rancher-s3-snapshot-status" name="S3 Snapshot Status">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="isS3Ready" label="Check box when S3 Snapshot test OK" type="boolean" defaultValue="false" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1mlddfj</bpmn:incoming>
+      <bpmn:incoming>Flow_0dpeztk</bpmn:incoming>
+      <bpmn:outgoing>Flow_09mq2rj</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="rancher-resilency-tests-status" name="Resilency Tests Status">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="resilencyTestsDone">ok</camunda:outputParameter>
+        </camunda:inputOutput>
+        <camunda:formData>
+          <camunda:formField id="isResiliencyTestsOk" label="Check box when resiliency tests are OK" type="boolean" defaultValue="false" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1grxola</bpmn:incoming>
+      <bpmn:incoming>Flow_030jdij</bpmn:incoming>
+      <bpmn:outgoing>Flow_12qd6qj</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:subProcess id="terraform-folder-creation" name="Terraform Folder Creation">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="throwFailure">true</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0gltzwm</bpmn:incoming>
+      <bpmn:incoming>Flow_0xg3xqu</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yd6fmp</bpmn:outgoing>
+      <bpmn:startEvent id="Event_1muuh5g">
+        <bpmn:outgoing>Flow_0nwlfqe</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:intermediateCatchEvent id="Event_12w7ajn" name="Wait 2 mins">
+        <bpmn:incoming>Flow_050s5nb</bpmn:incoming>
+        <bpmn:incoming>Flow_19d5j9r</bpmn:incoming>
+        <bpmn:outgoing>Flow_09q7qli</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerEventDefinition_07lpln6">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:intermediateCatchEvent>
+      <bpmn:serviceTask id="terraform-get-status" name="Terraform plan status" camunda:type="external" camunda:topic="poll-vm-status-topic">
+        <bpmn:extensionElements>
+          <camunda:inputOutput>
+            <camunda:inputParameter name="errRetryEnable">true</camunda:inputParameter>
+            <camunda:outputParameter name="isDeployed">false</camunda:outputParameter>
+          </camunda:inputOutput>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_09q7qli</bpmn:incoming>
+        <bpmn:outgoing>Flow_1qp9x3v</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:sequenceFlow id="Flow_09q7qli" sourceRef="Event_12w7ajn" targetRef="terraform-get-status" />
+      <bpmn:exclusiveGateway id="Gateway_0qndtou">
+        <bpmn:incoming>Flow_1qp9x3v</bpmn:incoming>
+        <bpmn:outgoing>Flow_050s5nb</bpmn:outgoing>
+        <bpmn:outgoing>Flow_05u4hq7</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:sequenceFlow id="Flow_1qp9x3v" sourceRef="terraform-get-status" targetRef="Gateway_0qndtou" />
+      <bpmn:sequenceFlow id="Flow_050s5nb" name="No" sourceRef="Gateway_0qndtou" targetRef="Event_12w7ajn">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${terraformIsDone== false}</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:endEvent id="Event_0a1k92l">
+        <bpmn:incoming>Flow_05u4hq7</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_05u4hq7" name="Yes" sourceRef="Gateway_0qndtou" targetRef="Event_0a1k92l">
+        <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${terraformIsDone== true}</bpmn:conditionExpression>
+      </bpmn:sequenceFlow>
+      <bpmn:sequenceFlow id="Flow_19d5j9r" sourceRef="create-project-folder" targetRef="Event_12w7ajn" />
+      <bpmn:sequenceFlow id="Flow_0nwlfqe" sourceRef="Event_1muuh5g" targetRef="create-project-folder" />
+      <bpmn:serviceTask id="create-project-folder" name="Create project folder" camunda:type="external" camunda:topic="deploy-tfvars-topic">
+        <bpmn:incoming>Flow_0nwlfqe</bpmn:incoming>
+        <bpmn:outgoing>Flow_19d5j9r</bpmn:outgoing>
+      </bpmn:serviceTask>
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Event_03a3gu3" attachedToRef="terraform-folder-creation">
+      <bpmn:outgoing>Flow_0945w62</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1nn7ypn" errorRef="Error_16qwuvf" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_09ivt5h" sourceRef="fill-rancher-informations" targetRef="get-folders" />
+    <bpmn:eventBasedGateway id="Gateway_15szxld" name="Wait for message">
+      <bpmn:incoming>Flow_0945w62</bpmn:incoming>
+      <bpmn:outgoing>Flow_1nwg2pp</bpmn:outgoing>
+    </bpmn:eventBasedGateway>
+    <bpmn:sequenceFlow id="Flow_0945w62" sourceRef="Event_03a3gu3" targetRef="Gateway_15szxld" />
+    <bpmn:intermediateCatchEvent id="Event_1ntn232" name="Retry">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="end">
+          <camunda:script scriptFormat="groovy">execution.removeVariable("message");
+execution.removeVariable("typeCode");</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1nwg2pp</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gltzwm</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_1w5hbm9" messageRef="Message_1n7rmg1" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1nwg2pp" sourceRef="Gateway_15szxld" targetRef="Event_1ntn232" />
+    <bpmn:sequenceFlow id="Flow_0gltzwm" sourceRef="Event_1ntn232" targetRef="terraform-folder-creation" />
+    <bpmn:sequenceFlow id="Flow_1yd6fmp" sourceRef="terraform-folder-creation" targetRef="s3-bucket-creation" />
+    <bpmn:sequenceFlow id="Flow_0msl2qj" sourceRef="email-notification-deployment" targetRef="inform-portal-completed" />
+    <bpmn:serviceTask id="email-notification-deployment" name="Email notification deployment" camunda:type="external" camunda:topic="send-caas-cluster-deployed-topic">
+      <bpmn:incoming>Flow_05p5gjy</bpmn:incoming>
+      <bpmn:outgoing>Flow_0msl2qj</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1pq8y8b" sourceRef="get-folders" targetRef="found-folder-gateway" />
+    <bpmn:serviceTask id="get-folders" name="Get Folders" camunda:type="external" camunda:topic="get-folders-topic">
+      <bpmn:incoming>Flow_09ivt5h</bpmn:incoming>
+      <bpmn:outgoing>Flow_1pq8y8b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="found-folder-gateway" name="Found Folder in vSphere?">
+      <bpmn:incoming>Flow_1pq8y8b</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xg3xqu</bpmn:outgoing>
+      <bpmn:outgoing>Flow_00mluyz</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0xg3xqu" sourceRef="found-folder-gateway" targetRef="terraform-folder-creation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="groovy">def folders = execution.getVariable("vsphereFolders");
+return folders.size() == 0;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_00mluyz" sourceRef="found-folder-gateway" targetRef="s3-bucket-creation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="groovy">def folders = execution.getVariable("vsphereFolders");
+return folders.size() &gt; 0;</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="create-namespace" name="Create Namespace" camunda:type="external" camunda:topic="create-namespace-topic">
+      <bpmn:incoming>Flow_17fbsp8</bpmn:incoming>
+      <bpmn:outgoing>Flow_0y3a48z</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0y3a48z" sourceRef="create-namespace" targetRef="storage-class-creation" />
+    <bpmn:serviceTask id="update-project" name="Update Project" camunda:type="external" camunda:topic="update-project-topic">
+      <bpmn:incoming>Flow_147ohep</bpmn:incoming>
+      <bpmn:outgoing>Flow_17fbsp8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_17fbsp8" sourceRef="update-project" targetRef="create-namespace" />
+    <bpmn:textAnnotation id="TextAnnotation_0rkkg58">
+      <bpmn:text>Virtualization accepted</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1hkuvtq" sourceRef="car-ntss-validation" targetRef="TextAnnotation_0rkkg58" />
+    <bpmn:textAnnotation id="TextAnnotation_0fur676">
+      <bpmn:text>Create all server pool for each inventory group of workers/taint</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="TextAnnotation_0jr7dkw">
+      <bpmn:text>One virtual server per server pool of workers/taint
+définition du port, du type (L4 TCP), application du profile</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1ysvqzz" sourceRef="TextAnnotation_0jr7dkw" targetRef="nsxt-vip-virtual-servers-creation-loop" />
+    <bpmn:group id="nsxt-vip-cluster-creation" categoryValueRef="CategoryValue_13qd91b" />
+    <bpmn:group id="rancher-cluster-creation" categoryValueRef="CategoryValue_102dbqe" />
+    <bpmn:textAnnotation id="TextAnnotation_00dwoih">
+      <bpmn:documentation>cxcxcxcxcxcxcxc</bpmn:documentation>
+      <bpmn:text>Inputs :
+- alias
+- projectName
+- isProd : true for a prod cluster
+- taintSettings : westOnly / northWest / northWestSouth
+- north : north node sizing and vIP if used
+- west : west node sizing and vIP if used
+- south south node sizing and vIP if used
+- version : version of the cluster</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0k1smdt" sourceRef="StartEvent_1" targetRef="TextAnnotation_00dwoih" />
+    <bpmn:textAnnotation id="TextAnnotation_0ntjeg8">
+      <bpmn:text>Backups
+Syntax of bucket name PROJECTNAME-(3P/PROD)
+
+Automatisation de la création du bucket pour l'instant qui est fait à la main actuellement
+
+
+API S3</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_08zrr3t" sourceRef="s3-bucket-creation" targetRef="TextAnnotation_0ntjeg8" />
+    <bpmn:textAnnotation id="TextAnnotation_0angynk">
+      <bpmn:text>RKE cluster template revision  witouht S3 creation</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1p7pd8k" sourceRef="rancher-revision-without-s3" targetRef="TextAnnotation_0angynk" />
+    <bpmn:textAnnotation id="TextAnnotation_1mw65gd">
+      <bpmn:text>RKE cluster template revision with S3 creation
+/!\ Keep fake worker as we dont have S3 in lab</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0nizbco" sourceRef="TextAnnotation_1mw65gd" targetRef="rancher-revision-with-s3" />
+    <bpmn:textAnnotation id="TextAnnotation_0fscnhd">
+      <bpmn:text>Cluster deployment - Apply RKE template with S3</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0jvb554" sourceRef="TextAnnotation_0fscnhd" targetRef="cluster-updating-with-s3" />
+    <bpmn:association id="Association_0h0gstn" sourceRef="TextAnnotation_0fur676" targetRef="nsxt-vip-server-pool-creation-loop" />
+    <bpmn:textAnnotation id="TextAnnotation_0rezl5g">
+      <bpmn:text>1 template for master node
+1 template for worker/taint node</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0l8hxik" sourceRef="rancher-node-template-creation-loop" targetRef="TextAnnotation_0rezl5g" />
+    <bpmn:group id="cluster-creation-validation" categoryValueRef="CategoryValue_08rwgfz" />
+    <bpmn:textAnnotation id="TextAnnotation_0qhxb10">
+      <bpmn:text>Create empty RKE template</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1jvqudy" sourceRef="rancher-create-empty-rke-template" targetRef="TextAnnotation_0qhxb10" />
+    <bpmn:textAnnotation id="TextAnnotation_0y9usrk">
+      <bpmn:text>Create empty cluster based on without S3 template revision</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1aemuux" sourceRef="rancher-empty-cluster" targetRef="TextAnnotation_0y9usrk" />
+    <bpmn:textAnnotation id="TextAnnotation_17btehm">
+      <bpmn:text>Need to add node pool master, taint for each</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1n74e3v" sourceRef="rancher-empty-cluster" targetRef="TextAnnotation_17btehm" />
+    <bpmn:association id="Association_1p9jhpk" sourceRef="car-nsd-validatoin" targetRef="TextAnnotation_0q3rfvp" />
+    <bpmn:textAnnotation id="TextAnnotation_0q3rfvp">
+      <bpmn:text>Provide VIP</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="TextAnnotation_1wpanf4">
+      <bpmn:text>Loop to create inventory groups :
+- URO_OKS_MASTER_projectName
+- URO_OKS_WORKER_NORTH_projectName 
+- URO_OKS_WORKER_WEST_projectName 
+- URO_OKS_WORKER_SOUTH_projectName 
+- URO_OKS_WORKER_projectName
+- URO_OKS_projectName</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0dsfyo5" sourceRef="TextAnnotation_1wpanf4" targetRef="nsxt-create-inventory-groups" />
+    <bpmn:textAnnotation id="TextAnnotation_159lv08">
+      <bpmn:text>type : vsphere
+mode : default</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1n8zyq3" sourceRef="storage-class-creation" targetRef="TextAnnotation_159lv08" />
+    <bpmn:textAnnotation id="TextAnnotation_1s8b2sa">
+      <bpmn:text>Create a test PVC on default namespace</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_06t20w9" sourceRef="pvc-creation" targetRef="TextAnnotation_1s8b2sa" />
+    <bpmn:textAnnotation id="TextAnnotation_0ayx1og">
+      <bpmn:text>Manual until get S3 available in lab</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1d8bl1q" sourceRef="rancher-s3-snapshot-status" targetRef="TextAnnotation_0ayx1og" />
+    <bpmn:textAnnotation id="TextAnnotation_0w3i0k1">
+      <bpmn:text>Create a first namespace : - production for PROD clusters - preproduction for 3P clusters</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_01wc9ld" sourceRef="create-namespace" targetRef="TextAnnotation_0w3i0k1" />
+  </bpmn:process>
+  <bpmn:message id="Message_0vlhlmo" name="change-requested-date-message" />
+  <bpmn:message id="Message_0akaeu0" name="cancel-request-message" />
+  <bpmn:error id="Error_08qq11o" name="t1_err" errorCode="ERR" />
+  <bpmn:category id="Category_1pc88lq">
+    <bpmn:categoryValue id="CategoryValue_13qd91b" value="NSX-T VIP Cluster Creation" />
+  </bpmn:category>
+  <bpmn:category id="Category_1pv2y05">
+    <bpmn:categoryValue id="CategoryValue_102dbqe" value="Rancher&#10; Cluster Creation" />
+  </bpmn:category>
+  <bpmn:category id="Category_0i4q2b8">
+    <bpmn:categoryValue id="CategoryValue_1qndopd" value="Rancher&#10;Cluster Creation" />
+  </bpmn:category>
+  <bpmn:category id="Category_082vqxy">
+    <bpmn:categoryValue id="CategoryValue_08rwgfz" value="Validation" />
+  </bpmn:category>
+  <bpmn:error id="Error_05j7o1y" name="Terraform_deploy_error" errorCode="ERR_RETRY" />
+  <bpmn:error id="Error_16qwuvf" name="Terraform_Error" errorCode="ERR" />
+  <bpmn:message id="Message_1n7rmg1" name="retry-request-message" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="deploy-cluster">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="409" y="439" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hpfter_di" bpmnElement="inform-portal-planned" bioc:stroke="#1e88e5" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#1e88e5">
+        <dc:Bounds x="500" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0x0g0b5_di" bpmnElement="Gateway_0x0g0b5">
+        <dc:Bounds x="685" y="432" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_149k85e_di" bpmnElement="Event_149k85e">
+        <dc:Bounds x="692" y="572" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ambr5t_di" bpmnElement="Event_1ambr5t" bioc:stroke="black" bioc:fill="white">
+        <dc:Bounds x="692" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hchdva_di" bpmnElement="inform-portal-cancelled" bioc:stroke="#1e88e5" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#1e88e5">
+        <dc:Bounds x="660" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1iidaez_di" bpmnElement="Event_1iidaez">
+        <dc:Bounds x="692" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0im3y6t_di" bpmnElement="Event_0im3y6t">
+        <dc:Bounds x="802" y="439" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18jyq46_di" bpmnElement="inform-portal-processing" bioc:stroke="#1e88e5" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#1e88e5">
+        <dc:Bounds x="890" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1mgns4v_di" bpmnElement="Event_074shxi">
+        <dc:Bounds x="1332" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1321" y="308" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1v7wyil_di" bpmnElement="Gateway_1v7wyil" isMarkerVisible="true">
+        <dc:Bounds x="1455" y="432" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1467" y="489" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_01lu23z_di" bpmnElement="Event_1c65bzs">
+        <dc:Bounds x="1632" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1623" y="308" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1am5lic_di" bpmnElement="Gateway_1am5lic" isMarkerVisible="true">
+        <dc:Bounds x="1765" y="432" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1779" y="489" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0a5osfc_di" bpmnElement="Gateway_0a5osfc" isMarkerVisible="true">
+        <dc:Bounds x="2065" y="432" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2077" y="489" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0z9ys6e_di" bpmnElement="Event_0q8nk2l">
+        <dc:Bounds x="2742" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2734" y="1468" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1uv2yr4_di" bpmnElement="Gateway_1uv2yr4" isMarkerVisible="true">
+        <dc:Bounds x="2905" y="1605" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2914" y="1665" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_062u7l8_di" bpmnElement="Gateway_062u7l8" isMarkerVisible="true">
+        <dc:Bounds x="1240" y="1605" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1250" y="1665" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1275uso_di" bpmnElement="Event_0fdvevk">
+        <dc:Bounds x="1119" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1112" y="1468" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1vvnd9a_di" bpmnElement="Gateway_1vvnd9a" isMarkerVisible="true">
+        <dc:Bounds x="1705" y="1605" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1714" y="1665" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1o3jhkp_di" bpmnElement="Gateway_1o3jhkp" isMarkerVisible="true">
+        <dc:Bounds x="2035" y="1605" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2044" y="1665" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1s00ve4_di" bpmnElement="Event_1ofqdq8">
+        <dc:Bounds x="1572" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1566" y="1468" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1i67yfk_di" bpmnElement="Gateway_1i67yfk" isMarkerVisible="true">
+        <dc:Bounds x="2525" y="1605" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2535" y="1665" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0dy2jxa_di" bpmnElement="Event_1kn6yf0">
+        <dc:Bounds x="2382" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2376" y="1468" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05x7al6_di" bpmnElement="inform-portal-completed" bioc:stroke="#1e88e5" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#1e88e5">
+        <dc:Bounds x="3320" y="1590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1czi9u5_di" bpmnElement="Event_1czi9u5">
+        <dc:Bounds x="3482" y="1612" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hnc0r6_di" bpmnElement="car-creation" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="1130" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1p8ytqf_di" bpmnElement="Gateway_1p8ytqf" isMarkerVisible="true">
+        <dc:Bounds x="3015" y="965" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3025" y="1022" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0geplh5_di" bpmnElement="Event_05vl6mj">
+        <dc:Bounds x="2712" y="872" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2703" y="848" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hpsvud_di" bpmnElement="Event_1gtojxd">
+        <dc:Bounds x="1882" y="1492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1876" y="1468" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0o1asxl_di" bpmnElement="car-so-validation" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="1300" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0pedyut_di" bpmnElement="car-ntss-validation" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="1600" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05ed7vs_di" bpmnElement="car-nsd-validatoin" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="1900" y="430" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1nour08_di" bpmnElement="fill-nsxt-informations">
+        <dc:Bounds x="2200" y="417" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1qm0v6e_di" bpmnElement="rancher-revision-without-s3" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="1700" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_040bqfe_di" bpmnElement="rancher-revision-with-s3" bioc:fill="#00beff" color:background-color="#00beff">
+        <dc:Bounds x="1890" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0r9zf2k_di" bpmnElement="cluster-without-s3-status" bioc:fill="#04bfff" color:background-color="#04bfff">
+        <dc:Bounds x="2680" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ac2hgk_di" bpmnElement="Event_0ac2hgk">
+        <dc:Bounds x="3352" y="872" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3343" y="848" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_03c9eob_di" bpmnElement="Gateway_03c9eob" isMarkerVisible="true">
+        <dc:Bounds x="3620" y="965" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3629" y="1025" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1tcnvo2_di" bpmnElement="rancher-storage-class-status" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="1077" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0554k14_di" bpmnElement="rancher-volume-status" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="1540" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_11qrezw_di" bpmnElement="rancher-launch-resilency-tests" bioc:fill="#00beff" color:background-color="#00beff">
+        <dc:Bounds x="2180" y="1590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dwbpwr_di" bpmnElement="car-opctech-implementation" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
+        <dc:Bounds x="2710" y="1590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1o94nlm_di" bpmnElement="fill-rancher-informations" bioc:stroke="#000000" bioc:fill="#ffffff" color:background-color="#ffffff" color:border-color="#000000">
+        <dc:Bounds x="3860" y="419" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14z44qe_di" bpmnElement="rancher-create-empty-rke-template" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="1530" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1276982_di" bpmnElement="rancher-empty-cluster" bioc:fill="#00beff" color:background-color="#00beff">
+        <dc:Bounds x="2056" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13jmwzy_di" bpmnElement="cluster-updating-with-s3" bioc:fill="#00bdfe" color:background-color="#00bdfe">
+        <dc:Bounds x="3143" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0klods1_di" bpmnElement="s3-bucket-creation" bioc:fill="#00ff13" color:background-color="#00ff13">
+        <dc:Bounds x="890" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1dt57r1_di" bpmnElement="create-project" bioc:fill="#00bdfe" color:background-color="#00bdfe">
+        <dc:Bounds x="3750" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0at5ypt_di" bpmnElement="cluster-with-s3-status" bioc:fill="#04bfff" color:background-color="#04bfff">
+        <dc:Bounds x="3320" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_012tkjp_di" bpmnElement="nodes-status-with-s3" bioc:fill="#04bfff" color:background-color="#04bfff">
+        <dc:Bounds x="3470" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1y1sekr" bpmnElement="nodes-status-without-s3" bioc:fill="#04bfff" color:background-color="#04bfff">
+        <dc:Bounds x="2860" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1jjg3pt_di" bpmnElement="Event_04vu2hz">
+        <dc:Bounds x="1932" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1921" y="308" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1oeuj0h" bpmnElement="storage-class-creation" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="910" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_10vn70u" bpmnElement="pvc-creation" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="1370" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1v4q05f_di" bpmnElement="rancher-s3-snapshot-status" bioc:fill="#00beff" color:background-color="#00beff">
+        <dc:Bounds x="1850" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_09e4qv5_di" bpmnElement="rancher-resilency-tests-status" bioc:fill="#03bfff" color:background-color="#03bfff">
+        <dc:Bounds x="2350" y="1590" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_15szxld_di" bpmnElement="Gateway_15szxld" bioc:stroke="black" bioc:fill="white">
+        <dc:Bounds x="4315" y="205" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4375" y="217" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ntn232_di" bpmnElement="Event_1ntn232">
+        <dc:Bounds x="4232" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4236" y="188" width="27" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18ylxyc_di" bpmnElement="email-notification-deployment">
+        <dc:Bounds x="3100" y="1590" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ab4tdm_di" bpmnElement="get-folders" bioc:stroke="#fb8c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#fb8c00">
+        <dc:Bounds x="3993" y="419" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_08p259g_di" bpmnElement="found-folder-gateway" isMarkerVisible="true">
+        <dc:Bounds x="4135" y="434" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4124" y="404" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_03iqtob" bpmnElement="create-namespace" bioc:fill="#00bdfe" color:background-color="#00bdfe">
+        <dc:Bounds x="4110" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0kdvdqr" bpmnElement="update-project" bioc:fill="#00bdfe" color:background-color="#00bdfe">
+        <dc:Bounds x="3920" y="950" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0jn3a8s_di" bpmnElement="nsxt-create-inventory-groups" isExpanded="true" bioc:stroke="#000000" bioc:fill="#ffffff" color:background-color="#ffffff" color:border-color="#000000">
+        <dc:Bounds x="2400" y="356" width="410" height="201" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0v6lgc7_di" bpmnElement="Event_0v6lgc7">
+        <dc:Bounds x="2440" y="442" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_00qx3ux_di" bpmnElement="Event_00qx3ux">
+        <dc:Bounds x="2722" y="442" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ljkhkp_di" bpmnElement="nsxt-create-inventory-group" bioc:fill="#fcff04" color:background-color="#fcff04">
+        <dc:Bounds x="2560" y="420" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0pm1oci_di" bpmnElement="Flow_0pm1oci">
+        <di:waypoint x="2476" y="460" />
+        <di:waypoint x="2560" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0boco41_di" bpmnElement="Flow_0boco41">
+        <di:waypoint x="2660" y="460" />
+        <di:waypoint x="2722" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0psoxcs_di" bpmnElement="nsxt-vip-server-pool-creation-loop" isExpanded="true">
+        <dc:Bounds x="2985" y="359" width="350" height="195" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ccwpsu_di" bpmnElement="Event_1ccwpsu">
+        <dc:Bounds x="3025" y="436" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_15xmxj9_di" bpmnElement="Event_15xmxj9">
+        <dc:Bounds x="3277" y="436" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_16u8n02_di" bpmnElement="nsxt-vip-server-pool-creation" bioc:fill="#fcff04" color:background-color="#fcff04">
+        <dc:Bounds x="3115" y="414" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0piopr2_di" bpmnElement="Flow_0piopr2">
+        <di:waypoint x="3061" y="454" />
+        <di:waypoint x="3115" y="454" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_106n45c_di" bpmnElement="Flow_106n45c">
+        <di:waypoint x="3215" y="454" />
+        <di:waypoint x="3277" y="454" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0br1tht_di" bpmnElement="nsxt-vip-virtual-servers-creation-loop" isExpanded="true">
+        <dc:Bounds x="3420" y="359" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0vpnkms_di" bpmnElement="Event_0vpnkms">
+        <dc:Bounds x="3460" y="441" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_17qe6yc_di" bpmnElement="Event_17qe6yc">
+        <dc:Bounds x="3712" y="441" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14ap9k3_di" bpmnElement="nsxt-vip-virtual-servers-creation" bioc:fill="#fcff00" color:background-color="#fcff00">
+        <dc:Bounds x="3550" y="419" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0x7wrg9_di" bpmnElement="Flow_0x7wrg9">
+        <di:waypoint x="3496" y="459" />
+        <di:waypoint x="3550" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1nnzm1b_di" bpmnElement="Flow_1nnzm1b">
+        <di:waypoint x="3650" y="459" />
+        <di:waypoint x="3712" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0om6ftx_di" bpmnElement="rancher-node-template-creation-loop" isExpanded="true">
+        <dc:Bounds x="1090" y="890" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hyy66f_di" bpmnElement="Event_1hyy66f">
+        <dc:Bounds x="1130" y="972" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_10if411_di" bpmnElement="Event_10if411">
+        <dc:Bounds x="1362" y="972" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hb5brw_di" bpmnElement="rancher-node-template-creation" bioc:stroke="#000000" bioc:fill="#00beff" color:background-color="#00beff" color:border-color="#000000">
+        <dc:Bounds x="1210" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0xj8zad_di" bpmnElement="Flow_0xj8zad">
+        <di:waypoint x="1166" y="990" />
+        <di:waypoint x="1210" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rwoyzy_di" bpmnElement="Flow_1rwoyzy">
+        <di:waypoint x="1310" y="990" />
+        <di:waypoint x="1362" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0ki00bx_di" bpmnElement="rancher-create-node-pools" isExpanded="true">
+        <dc:Bounds x="2212" y="890" width="418" height="208" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wrjvr0_di" bpmnElement="Event_1wrjvr0">
+        <dc:Bounds x="2232" y="972" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0nok6vn_di" bpmnElement="rancher-create-node-pool" bioc:fill="#00bdfe" color:background-color="#00bdfe">
+        <dc:Bounds x="2340" y="950" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_15a11w4_di" bpmnElement="Event_15a11w4">
+        <dc:Bounds x="2532" y="972" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0kxoxny_di" bpmnElement="Flow_0kxoxny">
+        <di:waypoint x="2268" y="990" />
+        <di:waypoint x="2340" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pernqg_di" bpmnElement="Flow_0pernqg">
+        <di:waypoint x="2440" y="990" />
+        <di:waypoint x="2532" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_18frrpl_di" bpmnElement="terraform-folder-creation" isExpanded="true">
+        <dc:Bounds x="4300" y="319" width="660" height="276" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1muuh5g_di" bpmnElement="Event_1muuh5g">
+        <dc:Bounds x="4340" y="426" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_12w7ajn_di" bpmnElement="Event_12w7ajn">
+        <dc:Bounds x="4572" y="426" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4563" y="402" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0yev56x_di" bpmnElement="terraform-get-status" bioc:stroke="rgb(251, 140, 0)" bioc:fill="rgb(255, 224, 178)">
+        <dc:Bounds x="4650" y="404" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0qndtou_di" bpmnElement="Gateway_0qndtou" isMarkerVisible="true">
+        <dc:Bounds x="4795" y="419" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0a1k92l_di" bpmnElement="Event_0a1k92l">
+        <dc:Bounds x="4892" y="426" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0h054rx" bpmnElement="create-project-folder" bioc:stroke="#fb8c00" bioc:fill="#ffe0b2" color:background-color="#ffe0b2" color:border-color="#fb8c00">
+        <dc:Bounds x="4410" y="404" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0nwlfqe_di" bpmnElement="Flow_0nwlfqe">
+        <di:waypoint x="4376" y="444" />
+        <di:waypoint x="4410" y="444" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_050s5nb_di" bpmnElement="Flow_050s5nb" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="4820" y="469" />
+        <di:waypoint x="4820" y="547" />
+        <di:waypoint x="4590" y="547" />
+        <di:waypoint x="4590" y="462" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4698" y="529" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19d5j9r_di" bpmnElement="Flow_19d5j9r">
+        <di:waypoint x="4510" y="444" />
+        <di:waypoint x="4572" y="444" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09q7qli_di" bpmnElement="Flow_09q7qli">
+        <di:waypoint x="4608" y="444" />
+        <di:waypoint x="4650" y="444" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qp9x3v_di" bpmnElement="Flow_1qp9x3v">
+        <di:waypoint x="4750" y="444" />
+        <di:waypoint x="4795" y="444" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05u4hq7_di" bpmnElement="Flow_05u4hq7" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="4845" y="444" />
+        <di:waypoint x="4892" y="444" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4861" y="426" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0k1smdt_di" bpmnElement="Association_0k1smdt">
+        <di:waypoint x="414" y="445" />
+        <di:waypoint x="296" y="342" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0dsfyo5_di" bpmnElement="Association_0dsfyo5">
+        <di:waypoint x="2620" y="650" />
+        <di:waypoint x="2480" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0h0gstn_di" bpmnElement="Association_0h0gstn">
+        <di:waypoint x="3190" y="660" />
+        <di:waypoint x="3080" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1ysvqzz_di" bpmnElement="Association_1ysvqzz">
+        <di:waypoint x="3552" y="650" />
+        <di:waypoint x="3480" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0l8hxik_di" bpmnElement="Association_0l8hxik">
+        <di:waypoint x="1184" y="1090" />
+        <di:waypoint x="1152" y="1130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1hkuvtq_di" bpmnElement="Association_1hkuvtq">
+        <di:waypoint x="1629" y="497" />
+        <di:waypoint x="1599" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1p9jhpk_di" bpmnElement="Association_1p9jhpk">
+        <di:waypoint x="1936" y="510" />
+        <di:waypoint x="1920" y="555" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1p7pd8k_di" bpmnElement="Association_1p7pd8k">
+        <di:waypoint x="1732" y="1030" />
+        <di:waypoint x="1700" y="1098" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0nizbco_di" bpmnElement="Association_0nizbco">
+        <di:waypoint x="1870" y="1145" />
+        <di:waypoint x="1923" y="1030" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1jvqudy_di" bpmnElement="Association_1jvqudy">
+        <di:waypoint x="1557" y="1030" />
+        <di:waypoint x="1518" y="1099" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1aemuux_di" bpmnElement="Association_1aemuux">
+        <di:waypoint x="2086" y="1030" />
+        <di:waypoint x="2052" y="1096" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1n74e3v_di" bpmnElement="Association_1n74e3v">
+        <di:waypoint x="2060" y="952" />
+        <di:waypoint x="1988" y="890" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_0jvb554_di" bpmnElement="Association_0jvb554">
+        <di:waypoint x="3160" y="1090" />
+        <di:waypoint x="3185" y="1030" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_08zrr3t_di" bpmnElement="Association_08zrr3t">
+        <di:waypoint x="891" y="1024" />
+        <di:waypoint x="825" y="1066" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1n8zyq3_di" bpmnElement="Association_1n8zyq3">
+        <di:waypoint x="956" y="1670" />
+        <di:waypoint x="989" y="1721" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_06t20w9_di" bpmnElement="Association_06t20w9">
+        <di:waypoint x="1400" y="1670" />
+        <di:waypoint x="1430" y="1721" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1d8bl1q_di" bpmnElement="Association_1d8bl1q">
+        <di:waypoint x="1890" y="1670" />
+        <di:waypoint x="1920" y="1712" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_01wc9ld_di" bpmnElement="Association_01wc9ld">
+        <di:waypoint x="4135" y="1030" />
+        <di:waypoint x="4098" y="1089" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_03a3gu3_di" bpmnElement="Event_03a3gu3" bioc:stroke="rgb(229, 57, 53)" bioc:fill="rgb(255, 205, 210)">
+        <dc:Bounds x="4422" y="301" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0rkkg58_di" bpmnElement="TextAnnotation_0rkkg58">
+        <dc:Bounds x="1540" y="555" width="150" height="30" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0fur676_di" bpmnElement="TextAnnotation_0fur676">
+        <dc:Bounds x="3190" y="630" width="240" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0jr7dkw_di" bpmnElement="TextAnnotation_0jr7dkw">
+        <dc:Bounds x="3562" y="616" width="270" height="68" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0wbxq4b_di" bpmnElement="Flow_0wbxq4b">
+        <di:waypoint x="445" y="457" />
+        <di:waypoint x="500" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0rcftjf_di" bpmnElement="Flow_0rcftjf">
+        <di:waypoint x="600" y="457" />
+        <di:waypoint x="685" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jai4vk_di" bpmnElement="Flow_0jai4vk">
+        <di:waypoint x="692" y="590" />
+        <di:waypoint x="640" y="590" />
+        <di:waypoint x="640" y="457" />
+        <di:waypoint x="685" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09rv9g3_di" bpmnElement="Flow_09rv9g3">
+        <di:waypoint x="710" y="482" />
+        <di:waypoint x="710" y="572" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12ffxxg_di" bpmnElement="Flow_12ffxxg">
+        <di:waypoint x="710" y="432" />
+        <di:waypoint x="710" y="368" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12m36tr_di" bpmnElement="Flow_12m36tr">
+        <di:waypoint x="735" y="457" />
+        <di:waypoint x="802" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1f2eccr_di" bpmnElement="Flow_1f2eccr">
+        <di:waypoint x="710" y="332" />
+        <di:waypoint x="710" y="270" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vs1aux_di" bpmnElement="Flow_1vs1aux">
+        <di:waypoint x="710" y="190" />
+        <di:waypoint x="710" y="138" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1kiawyp_di" bpmnElement="Flow_1kiawyp">
+        <di:waypoint x="838" y="457" />
+        <di:waypoint x="890" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ijm5cb_di" bpmnElement="Flow_1ijm5cb">
+        <di:waypoint x="990" y="457" />
+        <di:waypoint x="1130" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_042rs2r_di" bpmnElement="Flow_042rs2r" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="1480" y="432" />
+        <di:waypoint x="1480" y="350" />
+        <di:waypoint x="1368" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1395" y="332" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1exbzmp_di" bpmnElement="Flow_1exbzmp">
+        <di:waypoint x="1350" y="368" />
+        <di:waypoint x="1350" y="417" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18yz83n_di" bpmnElement="Flow_18yz83n">
+        <di:waypoint x="1400" y="457" />
+        <di:waypoint x="1455" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1sj18mf_di" bpmnElement="Flow_1sj18mf" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="1505" y="457" />
+        <di:waypoint x="1600" y="457" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1545" y="439" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1anbe5q_di" bpmnElement="Flow_1anbe5q" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="1790" y="432" />
+        <di:waypoint x="1790" y="350" />
+        <di:waypoint x="1668" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1712" y="332" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1noughb_di" bpmnElement="Flow_1noughb">
+        <di:waypoint x="1650" y="368" />
+        <di:waypoint x="1650" y="417" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11zr1jf_di" bpmnElement="Flow_11zr1jf">
+        <di:waypoint x="1700" y="457" />
+        <di:waypoint x="1765" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06xv0th_di" bpmnElement="Flow_06xv0th" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="1815" y="457" />
+        <di:waypoint x="1858" y="457" />
+        <di:waypoint x="1858" y="470" />
+        <di:waypoint x="1900" y="470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1871" y="452" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07pjivw_di" bpmnElement="Flow_07pjivw">
+        <di:waypoint x="2000" y="470" />
+        <di:waypoint x="2033" y="470" />
+        <di:waypoint x="2033" y="457" />
+        <di:waypoint x="2065" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0633n0z_di" bpmnElement="Flow_0633n0z" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="2115" y="457" />
+        <di:waypoint x="2200" y="457" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2149" y="439" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1epzv2i_di" bpmnElement="Flow_1epzv2i" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="2090" y="432" />
+        <di:waypoint x="2090" y="350" />
+        <di:waypoint x="1968" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2047" y="332" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1quizbl_di" bpmnElement="Flow_1quizbl">
+        <di:waypoint x="2300" y="457" />
+        <di:waypoint x="2400" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vcip1s_di" bpmnElement="Flow_0vcip1s">
+        <di:waypoint x="2810" y="454" />
+        <di:waypoint x="2985" y="454" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1li595c_di" bpmnElement="Flow_1li595c">
+        <di:waypoint x="3335" y="459" />
+        <di:waypoint x="3420" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0t01581_di" bpmnElement="Flow_0t01581">
+        <di:waypoint x="3770" y="459" />
+        <di:waypoint x="3860" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1uy0f2a_di" bpmnElement="Flow_1uy0f2a" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="2930" y="1605" />
+        <di:waypoint x="2930" y="1510" />
+        <di:waypoint x="2778" y="1510" />
+        <bpmndi:BPMNLabel color:color="#e53935">
+          <dc:Bounds x="2847" y="1483" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0tfbfek_di" bpmnElement="Flow_0tfbfek">
+        <di:waypoint x="2760" y="1528" />
+        <di:waypoint x="2760" y="1590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0fxz3bx_di" bpmnElement="Flow_0fxz3bx">
+        <di:waypoint x="2810" y="1630" />
+        <di:waypoint x="2905" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05p5gjy_di" bpmnElement="Flow_05p5gjy" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="2955" y="1630" />
+        <di:waypoint x="3100" y="1630" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3001" y="1612" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wflk1g_di" bpmnElement="Flow_1wflk1g">
+        <di:waypoint x="1177" y="1630" />
+        <di:waypoint x="1240" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0t3kfz5_di" bpmnElement="Flow_0t3kfz5" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="1265" y="1605" />
+        <di:waypoint x="1265" y="1510" />
+        <di:waypoint x="1155" y="1510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1209" y="1493" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0um6hq1_di" bpmnElement="Flow_0um6hq1" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="1290" y="1630" />
+        <di:waypoint x="1370" y="1630" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1322" y="1612" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1s69ff2_di" bpmnElement="Flow_1s69ff2">
+        <di:waypoint x="1137" y="1528" />
+        <di:waypoint x="1137" y="1590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iglz4p_di" bpmnElement="Flow_1iglz4p">
+        <di:waypoint x="1640" y="1630" />
+        <di:waypoint x="1705" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_083hbva_di" bpmnElement="Flow_083hbva" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="1730" y="1605" />
+        <di:waypoint x="1730" y="1510" />
+        <di:waypoint x="1608" y="1510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1667" y="1493" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mlddfj_di" bpmnElement="Flow_1mlddfj" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="1755" y="1630" />
+        <di:waypoint x="1850" y="1630" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1795" y="1612" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09mq2rj_di" bpmnElement="Flow_09mq2rj">
+        <di:waypoint x="1950" y="1630" />
+        <di:waypoint x="2035" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0bvcm49_di" bpmnElement="Flow_0bvcm49" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="2060" y="1605" />
+        <di:waypoint x="2060" y="1510" />
+        <di:waypoint x="1918" y="1510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1996" y="1493" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1v63s3t_di" bpmnElement="Flow_1v63s3t" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="2085" y="1630" />
+        <di:waypoint x="2180" y="1630" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2107" y="1643" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1p9usmp_di" bpmnElement="Flow_1p9usmp">
+        <di:waypoint x="1590" y="1528" />
+        <di:waypoint x="1590" y="1590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12qd6qj_di" bpmnElement="Flow_12qd6qj">
+        <di:waypoint x="2450" y="1630" />
+        <di:waypoint x="2525" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04t9tgl_di" bpmnElement="Flow_04t9tgl" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="2550" y="1605" />
+        <di:waypoint x="2550" y="1510" />
+        <di:waypoint x="2418" y="1510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2482" y="1493" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1w543za_di" bpmnElement="Flow_1w543za" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="2575" y="1630" />
+        <di:waypoint x="2710" y="1630" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2611" y="1612" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1grxola_di" bpmnElement="Flow_1grxola">
+        <di:waypoint x="2400" y="1528" />
+        <di:waypoint x="2400" y="1590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0msl2qj_di" bpmnElement="Flow_0msl2qj">
+        <di:waypoint x="3200" y="1630" />
+        <di:waypoint x="3320" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mxpi2g_di" bpmnElement="Flow_1mxpi2g">
+        <di:waypoint x="3420" y="1630" />
+        <di:waypoint x="3482" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0omldcz_di" bpmnElement="Flow_0omldcz">
+        <di:waypoint x="1230" y="457" />
+        <di:waypoint x="1300" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1s366t2_di" bpmnElement="Flow_1s366t2">
+        <di:waypoint x="990" y="990" />
+        <di:waypoint x="1090" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yxherx_di" bpmnElement="Flow_0yxherx">
+        <di:waypoint x="1440" y="990" />
+        <di:waypoint x="1530" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_050m6f4_di" bpmnElement="Flow_050m6f4">
+        <di:waypoint x="2960" y="990" />
+        <di:waypoint x="3015" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05wzr1z_di" bpmnElement="Flow_05wzr1z" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="3040" y="965" />
+        <di:waypoint x="3040" y="890" />
+        <di:waypoint x="2748" y="890" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2885" y="873" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vzf15m_di" bpmnElement="Flow_1vzf15m" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="3065" y="990" />
+        <di:waypoint x="3143" y="990" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3074" y="972" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0fqabxv_di" bpmnElement="Flow_0fqabxv">
+        <di:waypoint x="2730" y="908" />
+        <di:waypoint x="2730" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dpeztk_di" bpmnElement="Flow_0dpeztk">
+        <di:waypoint x="1900" y="1528" />
+        <di:waypoint x="1900" y="1590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iynmq7_di" bpmnElement="Flow_1iynmq7">
+        <di:waypoint x="1950" y="368" />
+        <di:waypoint x="1950" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hpmqjl_di" bpmnElement="Flow_1hpmqjl">
+        <di:waypoint x="1630" y="990" />
+        <di:waypoint x="1700" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lq5sc7_di" bpmnElement="Flow_0lq5sc7">
+        <di:waypoint x="1800" y="990" />
+        <di:waypoint x="1890" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jnn2ge_di" bpmnElement="Flow_0jnn2ge">
+        <di:waypoint x="1990" y="990" />
+        <di:waypoint x="2056" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tukm7n_di" bpmnElement="Flow_1tukm7n">
+        <di:waypoint x="2630" y="990" />
+        <di:waypoint x="2680" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yobqj6_di" bpmnElement="Flow_1yobqj6">
+        <di:waypoint x="2780" y="990" />
+        <di:waypoint x="2860" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0af6xfw_di" bpmnElement="Flow_0af6xfw" bioc:stroke="#e53935" color:border-color="#e53935">
+        <di:waypoint x="3645" y="965" />
+        <di:waypoint x="3645" y="890" />
+        <di:waypoint x="3388" y="890" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3653" y="925" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_169tgil_di" bpmnElement="Flow_169tgil">
+        <di:waypoint x="3370" y="908" />
+        <di:waypoint x="3370" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zdlgmo_di" bpmnElement="Flow_0zdlgmo">
+        <di:waypoint x="3570" y="990" />
+        <di:waypoint x="3620" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_103y1xp_di" bpmnElement="Flow_103y1xp" bioc:stroke="#43a047" color:border-color="#43a047">
+        <di:waypoint x="3670" y="990" />
+        <di:waypoint x="3750" y="990" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3691" y="972" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05vdxkp_di" bpmnElement="Flow_05vdxkp">
+        <di:waypoint x="1010" y="1630" />
+        <di:waypoint x="1077" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1okwomj_di" bpmnElement="Flow_1okwomj">
+        <di:waypoint x="1470" y="1630" />
+        <di:waypoint x="1540" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_030jdij_di" bpmnElement="Flow_030jdij">
+        <di:waypoint x="2280" y="1630" />
+        <di:waypoint x="2350" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09ivt5h_di" bpmnElement="Flow_09ivt5h">
+        <di:waypoint x="3960" y="459" />
+        <di:waypoint x="3993" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0icmjuu_di" bpmnElement="Flow_0icmjuu">
+        <di:waypoint x="2156" y="990" />
+        <di:waypoint x="2212" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xj96db_di" bpmnElement="Flow_1xj96db">
+        <di:waypoint x="3243" y="990" />
+        <di:waypoint x="3320" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yd6fmp_di" bpmnElement="Flow_1yd6fmp">
+        <di:waypoint x="4670" y="595" />
+        <di:waypoint x="4670" y="750" />
+        <di:waypoint x="940" y="750" />
+        <di:waypoint x="940" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00mluyz_di" bpmnElement="Flow_00mluyz">
+        <di:waypoint x="4160" y="484" />
+        <di:waypoint x="4160" y="750" />
+        <di:waypoint x="940" y="750" />
+        <di:waypoint x="940" y="950" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_147ohep_di" bpmnElement="Flow_147ohep">
+        <di:waypoint x="3850" y="990" />
+        <di:waypoint x="3920" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ejmbtv_di" bpmnElement="Flow_0ejmbtv">
+        <di:waypoint x="3420" y="990" />
+        <di:waypoint x="3470" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0y3a48z_di" bpmnElement="Flow_0y3a48z">
+        <di:waypoint x="4210" y="990" />
+        <di:waypoint x="4420" y="990" />
+        <di:waypoint x="4420" y="1330" />
+        <di:waypoint x="810" y="1330" />
+        <di:waypoint x="810" y="1630" />
+        <di:waypoint x="910" y="1630" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gltzwm_di" bpmnElement="Flow_0gltzwm">
+        <di:waypoint x="4250" y="248" />
+        <di:waypoint x="4250" y="457" />
+        <di:waypoint x="4300" y="457" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xg3xqu_di" bpmnElement="Flow_0xg3xqu">
+        <di:waypoint x="4185" y="459" />
+        <di:waypoint x="4300" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0945w62_di" bpmnElement="Flow_0945w62">
+        <di:waypoint x="4440" y="301" />
+        <di:waypoint x="4440" y="230" />
+        <di:waypoint x="4365" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1nwg2pp_di" bpmnElement="Flow_1nwg2pp">
+        <di:waypoint x="4315" y="230" />
+        <di:waypoint x="4268" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pq8y8b_di" bpmnElement="Flow_1pq8y8b">
+        <di:waypoint x="4093" y="459" />
+        <di:waypoint x="4135" y="459" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17fbsp8_di" bpmnElement="Flow_17fbsp8">
+        <di:waypoint x="4020" y="990" />
+        <di:waypoint x="4110" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Group_1iae5he_di" bpmnElement="nsxt-vip-cluster-creation">
+        <dc:Bounds x="2918" y="209" width="922" height="496" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3339" y="216" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Group_032e8fb_di" bpmnElement="rancher-cluster-creation">
+        <dc:Bounds x="1045" y="790" width="3223" height="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2619" y="797" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0ntjeg8_di" bpmnElement="TextAnnotation_0ntjeg8">
+        <dc:Bounds x="650" y="1072" width="350" height="133" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0angynk_di" bpmnElement="TextAnnotation_0angynk">
+        <dc:Bounds x="1642" y="1098" width="175" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1mw65gd_di" bpmnElement="TextAnnotation_1mw65gd">
+        <dc:Bounds x="1730" y="1150" width="280" height="45" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0fscnhd_di" bpmnElement="TextAnnotation_0fscnhd">
+        <dc:Bounds x="3130" y="1098" width="215" height="39" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0rezl5g_di" bpmnElement="TextAnnotation_0rezl5g">
+        <dc:Bounds x="1090" y="1130" width="310" height="39" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Group_055hq8l_di" bpmnElement="cluster-creation-validation">
+        <dc:Bounds x="840" y="1415" width="1810" height="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1726" y="1422" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0qhxb10_di" bpmnElement="TextAnnotation_0qhxb10">
+        <dc:Bounds x="1460" y="1099" width="188" height="31" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0y9usrk_di" bpmnElement="TextAnnotation_0y9usrk">
+        <dc:Bounds x="1925" y="1096" width="230" height="43" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_17btehm_di" bpmnElement="TextAnnotation_17btehm">
+        <dc:Bounds x="1880" y="860" width="260" height="30" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0q3rfvp_di" bpmnElement="TextAnnotation_0q3rfvp">
+        <dc:Bounds x="1880" y="555" width="100" height="30" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1wpanf4_di" bpmnElement="TextAnnotation_1wpanf4">
+        <dc:Bounds x="2620" y="593" width="290" height="113" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_159lv08_di" bpmnElement="TextAnnotation_159lv08">
+        <dc:Bounds x="990" y="1700" width="100" height="41" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1s8b2sa_di" bpmnElement="TextAnnotation_1s8b2sa">
+        <dc:Bounds x="1430" y="1701" width="180" height="40" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0ayx1og_di" bpmnElement="TextAnnotation_0ayx1og">
+        <dc:Bounds x="1925" y="1693" width="165" height="37" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0w3i0k1_di" bpmnElement="TextAnnotation_0w3i0k1">
+        <dc:Bounds x="4040" y="1089" width="180" height="51" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_00dwoih_di" bpmnElement="TextAnnotation_00dwoih">
+        <dc:Bounds x="160" y="200" width="320" height="142" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
