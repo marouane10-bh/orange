@@ -311,3 +311,20 @@ Le processus ferme tous les dossiers : il marque le changement CAR comme implém
 | **Node Pool** | Groupe de machines identiques dans un cluster |
 | **Storage Class** | Définit le type de stockage disponible (SSD, HDD, réseau) |
 | **Volume** | Espace disque réservé pour une application dans le cluster |
+
+
+
+## 4 choses à ajouter à l'Epic 1 :
+1/Forms JS — bpmn.io
+Dans Camunda on a  des formulaires .form propriétaires ? Ils ne fonctionnent pas dans Kogito. bpmn.io Forms c'est la solution de remplacement — c'est une librairie JavaScript open-source (faite par les mêmes créateurs que Camunda Modeler) qui permet de créer des formulaires standards qui fonctionnent avec Kogito.
+
+2/ Level of Effort (LOE) — Camunda vs Kogito
+C'est une estimation en jours/homme de combien de temps prend la migration de chaque type d'élément. Ça permet de planifier le projet et de convaincre les managers.
+
+3/ Plugin Keycloak
+Keycloak c'est un système de gestion des identités et des accès — en gros c'est lui qui gère qui a le droit de se connecter et de faire quoi dans ton application.
+Dans Camunda : Il existe un plugin officiel camunda-keycloak-plugin qui connecte Camunda à Keycloak. Les utilisateurs se connectent via Keycloak et Camunda leur donne les bonnes tâches selon leur rôle.
+Dans Kogito : Kogito utilise nativement Keycloak via OIDC (OpenID Connect) — pas besoin de plugin séparé. Mais la configuration est différente. C'est un point à documenter dans l'inventaire.
+
+4/ Strangler Pattern
+C'est une stratégie de migration progressive inventée par Martin Fowler. L'idée c'est de ne pas tout migrer d'un coup (trop risqué) mais de remplacer le vieux système petit à petit, processus par processus, jusqu'à ce que l'ancien soit complètement "étranglé" et disparaisse.
