@@ -17,7 +17,7 @@ Dans le cadre de ce projet, deux processus BPMN ont été analysés :
 
 ## Processus 1 — DemandeServiceIT
 
-### Ce que fait ce processus (en simple)
+### Ce que fait ce processus 
 
 Un utilisateur fait une demande de service IT. Un manager valide ou refuse. Si c'est accepté, le service est provisionné automatiquement via une API et l'utilisateur est notifié. Si c'est refusé, l'utilisateur reçoit une notification de refus.
 
@@ -36,18 +36,19 @@ Un utilisateur fait une demande de service IT. Un manager valide ou refuse. Si c
 
 ### Formulaires Camunda
 
-> Les formulaires Camunda sont des fichiers `.form` embarqués dans le processus. Chaque champ possède une propriété `key` qui correspond au nom d'une variable de processus.
+ Les formulaires Camunda sont des fichiers `.form` embarqués dans le processus. Chaque champ possède une propriété `key` qui correspond au nom d'une variable de processus.
 
 | Fichier | Task associée | Ce qu'il fait |
 |---|---|---|
 | `demandeServiceform.form` | User Task #2 | L'utilisateur saisit sa demande IT |
 | `validationform.form` | User Task #3 | Le manager approuve ou refuse |
 
-> ⚠️ **Migration** : Ces formulaires sont au format propriétaire Camunda. Ils devront être réécrits (HTML/React ou formulaires externes) pour Kogito.
+> NOTE POUR US 2\3: Ces formulaires sont au format propriétaire Camunda. Ils devront être réécrits pour Kogito( avec bpmn.io Forms).
 
 ### Java Delegates
 
-> Un Java Delegate est une classe Java qui exécute la logique métier d'une Service Task. Dans Camunda, la task appelle directement la classe Java. Dans Kogito, ce pattern n'existe pas — il faudra les remplacer par des appels REST.
+ Un Java Delegate est une classe Java qui exécute la logique métier d'une Service Task. Dans Camunda, la task appelle directement la classe Java.
+
 
 | Classe Java | Interface | Service Task associée |
 |---|---|---|
@@ -55,11 +56,12 @@ Un utilisateur fait une demande de service IT. Un manager valide ou refuse. Si c
 | `NotifyRefusDelegate.java` | `JavaDelegate` | Notifier refus |
 | `NotifySuccesDelegate.java` | `JavaDelegate` | Notifier succès |
 
-> ⚠️ **Migration** : Remplacer chaque `JavaDelegate` par un appel REST (Work Item Handler Kogito).
+
+> NOTE POUR US 2\3: Dans Kogito, ce pattern n'existe pas — il faudra les remplacer par des appels REST (Work Item Handler Kogito).
 
 ### Variables de processus
 
-> Les variables sont les données que le processus transporte d'une étape à l'autre. On les trouve dans les fichiers `.form` (champ `key`), dans les delegates (`getVariable` / `setVariable`), et dans le BPMN XML (`conditionExpression`).
+Les variables sont les données que le processus transporte d'une étape à l'autre. On les trouve dans les fichiers `.form` (champ `key`), dans les delegates (`getVariable` / `setVariable`), et dans le BPMN XML (`conditionExpression`).
 
 | Variable | Type | Description | Source | Utilisée dans |
 |---|---|---|---|---|
@@ -69,12 +71,11 @@ Un utilisateur fait une demande de service IT. Un manager valide ou refuse. Si c
 | `requestedBy` | String | Nom du demandeur | `.form` (key) | Task #2 |
 | `provisioningResult` | String | Résultat du provisioning API | `setVariable()` delegate | Tasks #5, #7 |
 
-> ⚠️ **Point critique** : Vérifier que les variables sont lues via `execution.getVariable("nom")` (portable) et non via Spin ou objets Java sérialisés (bloquant migration).
+> NOTE POUR US 2\3 : Vérifier que les variables sont lues via `execution.getVariable("nom")` (portable) et non via Spin ou objets Java sérialisés (bloquant migration).
 
 ### Configuration moteur Camunda
 
-> Dans Camunda 7, tout est centralisé dans un seul moteur configuré via `application.yaml`. Dans Kogito, chaque processus devient sa propre application indépendante — il n'y a pas de moteur central.
-
+Dans Camunda 7, tout est centralisé dans un seul moteur configuré via `application.yaml`.
 | Paramètre Camunda | Valeur actuelle | Équivalent Kogito |
 |---|---|---|
 | `history-level` | À vérifier dans `application.yaml` | **Data Index** (service K8s séparé) |
@@ -82,28 +83,18 @@ Un utilisateur fait une demande de service IT. Un manager valide ou refuse. Si c
 | `identity / IAM` | À documenter | Keycloak / OIDC dans l'app Kogito |
 | `plugins moteur` | Aucun identifié | Sans objet |
 
-> ⚠️ **Point critique** : Si `history-level: full`, le Data Index doit être déployé sur Kubernetes. Kogito n'a pas de History Service natif.
+> NOTE POUR US 2\3:  Dans Kogito, chaque processus devient sa propre application indépendante — il n'y a pas de moteur central.
+> Si `history-level: full`, le Data Index doit être déployé sur Kubernetes. Kogito n'a pas de History Service natif.
 
 ### Score de complexité
+> NOTE POUR US 2\3: A determiner .......
 
-| Critère | Score (1-3) | Justification |
-|---|---|---|
-| Nombre de tâches | 1 | 5 tâches, flux simple |
-| Java Delegates | 2 | 3 delegates à porter en REST |
-| Gateways | 1 | 1 XOR simple |
-| Formulaires Camunda | 2 | 2 forms à réécrire |
-| Variables sérialisées | 1 | Types String simples |
-| Timers / Boundary events | 1 | Aucun |
-| Sous-processus | 1 | Aucun |
-| External tasks | 1 | Aucune |
-
-**🟢 Score global : FAIBLE → Candidat pilote prioritaire (Quick Win)**
 
 ---
 
 ## Processus 2 — CAAS Deploy Cluster
 
-### Ce que fait ce processus (en simple)
+### Ce que fait ce processus 
 
 Une équipe de développeurs demande un nouveau cluster Kubernetes pour déployer leurs applications. Ce processus automatise tout : enregistrement de la demande, attente de la date programmée, validation par 3 équipes, configuration du réseau virtuel (NSX-T), création du cluster (Rancher), configuration du stockage, tests de résilience, et notification finale. La seule action humaine est la création du bucket S3.
 
